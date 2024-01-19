@@ -1,60 +1,11 @@
-#include "Renderer.h"
+#include "ContainerRenderer.h"
 
-#include <glm/gtc/matrix_transform.hpp>
-
-void Renderer::Render()
+ContainerRenderer::ContainerRenderer()
+    :Renderer("Container Renderer")
 {
-
-}
-void Renderer::RenderImage(Camera& camera)
-{
-    auto imageShader = std::make_shared<Shader>("./assets/shaders/Base.vs", "./assets/shaders/Base.fs");
-    if (!m_ImageVA)
-    {
-        float vertices[] = {
-             1.0f,  1.0f, 0.0f,  // top right
-             1.0f, -1.0f, 0.0f,  // bottom right
-            -1.0f, -1.0f, 0.0f,  // bottom left
-            -1.0f,  1.0f, 0.0f   // top left 
-        };
-        unsigned int indices[] = {  // note that we start from 0!
-            0, 1, 3,  // first Triangle
-            1, 2, 3   // second Triangle
-        };
-        unsigned int VBO, EBO;
-        glGenVertexArrays(1, &m_ImageVA);
-        glGenBuffers(1, &VBO);
-        glGenBuffers(1, &EBO);
-        // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-        glBindVertexArray(m_ImageVA);
-
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-    }
-    //begin render
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // activate shader
-    imageShader->use();
-
-    glBindVertexArray(m_ImageVA);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
 }
 
-
-
-void Renderer::RenderCube(Camera& camera)
+void ContainerRenderer::Render(Camera& camera)
 {
     auto containerImage = std::make_shared<Image>("./assets/textures/container.jpg");
     auto containerShader = std::make_shared<Shader>("./assets/shaders/vertex.vs", "./assets/shaders/frag.fs");
@@ -72,7 +23,7 @@ void Renderer::RenderCube(Camera& camera)
         glm::vec3(-1.3f,  1.0f, -1.5f)
     };
 
-    if (!m_CubeVA)
+    if (!m_VAO)
     {
         glEnable(GL_DEPTH_TEST);
         float vertices[] = {
@@ -120,11 +71,11 @@ void Renderer::RenderCube(Camera& camera)
         };
 
         unsigned int VBO = 0;
-        glGenVertexArrays(1, &m_CubeVA);
+        glGenVertexArrays(1, &m_VAO);
         //glCreateVertexArrays(1, &m_CubeVA);
         glGenBuffers(1, &VBO);
 
-        glBindVertexArray(m_CubeVA);
+        glBindVertexArray(m_VAO);
 
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -158,7 +109,7 @@ void Renderer::RenderCube(Camera& camera)
     glm::mat4 view = camera.GetView();
     containerShader->setMat4("view", view);
 
-    glBindVertexArray(m_CubeVA);
+    glBindVertexArray(m_VAO);
 
     for (unsigned int i = 0; i < 10; i++)
     {
@@ -172,4 +123,3 @@ void Renderer::RenderCube(Camera& camera)
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 }
-
