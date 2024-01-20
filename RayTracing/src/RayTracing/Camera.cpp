@@ -111,7 +111,7 @@ void Camera::OnUpdate(float ts)
 
 }
 
-void Camera::OnResize(uint32_t width, uint32_t height)
+void Camera::OnResize(int width, int height)
 {
 	if (width == m_ViewportWidth && height == m_ViewportHeight)
 		return;

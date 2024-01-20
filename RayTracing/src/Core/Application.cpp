@@ -171,16 +171,18 @@ void Application::Run()
         {
             imguilayer->Render(m_TimeStep);
         }
-
+        int display_w, display_h;
+        glfwGetFramebufferSize(m_GLFWwindow, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
         //ImGui::ShowDemoWindow(&show_demo_window);
 
 
         // Rendering
         ImGui::Render();
 
-        int display_w, display_h;
-        glfwGetFramebufferSize(m_GLFWwindow, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
+        //int display_w, display_h;
+        //glfwGetFramebufferSize(m_GLFWwindow, &display_w, &display_h);
+        //glViewport(0, 0, display_w, display_h);
         //glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         //glClear(GL_COLOR_BUFFER_BIT);
 

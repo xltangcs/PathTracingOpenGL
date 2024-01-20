@@ -15,6 +15,7 @@
 #include "RayTracing/Renderer.h"
 #include "RayTracing/Render/FirstRenderer.h"
 #include "RayTracing/Render/ContainerRenderer.h"
+#include "RayTracing/Render/RayRenderer.h"
 
 
 class MyImGuiLayer : public ImGuiLayer
@@ -23,18 +24,19 @@ public:
 	MyImGuiLayer()
 		:m_Camera(45.0f, 0.1f, 100.0f)
 	{
+		auto ray = std::make_shared<RayRenderer>();
+		m_Renderer.emplace_back(ray);
 		auto first = std::make_shared<FirstRenderer>();
 		m_Renderer.emplace_back(first);
-		m_RendererName.emplace_back(first->GetRendererName());
 		auto container = std::make_shared<ContainerRenderer>();
 		m_Renderer.emplace_back(container);
-		m_RendererName.emplace_back(container->GetRendererName());
+
+		for (auto render : m_Renderer)
+			m_RendererName.emplace_back(render->GetRendererName());
 	}
 
 	virtual void Render(float ts) override
 	{
-		//m_Renderer.RenderCube(m_Camera);
-		//m_Renderer.RenderImage(m_Camera);
 		m_Renderer[m_CurrentIndex]->Render(m_Camera);
 	}
 
