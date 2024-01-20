@@ -44,6 +44,8 @@ public:
 	{
 		ImGui::Begin("Setting");
 
+		ImGui::Text("The average fps: %.3f", ImGui::GetIO().Framerate);
+
 		if (ImGui::Combo("Scene", &m_RendererIndex, m_RendererName.data(), m_Renderer.size()))
 		{
 			m_CurrentIndex = m_RendererIndex;

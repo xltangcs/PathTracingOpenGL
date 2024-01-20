@@ -1,9 +1,51 @@
 #version 330 core
 
 out vec4 FragColor;
-
 in vec2 screenCoord;
 
+/*************** Random Begin ***********************/
+uint m_u = uint(521288629);
+uint m_v = uint(362436069);
+
+uint GetUintCore(inout uint u, inout uint v){
+	v = uint(36969) * (v & uint(65535)) + (v >> 16);
+	u = uint(18000) * (u & uint(65535)) + (u >> 16);
+	return (v << 16) + u;
+}
+
+float GetUniformCore(inout uint u, inout uint v){
+	uint z = GetUintCore(u, v);
+	
+	return float(z) / uint(4294967295);
+}
+
+float GetUniform(){
+	return GetUniformCore(m_u, m_v);
+}
+
+uint GetUint(){
+	return GetUintCore(m_u, m_v);
+}
+
+float rand(){
+	return GetUniform();
+}
+
+vec2 rand2(){
+	return vec2(rand(), rand());
+}
+
+vec3 rand3(){
+	return vec3(rand(), rand(), rand());
+}
+
+vec4 rand4(){
+	return vec4(rand(), rand(), rand(), rand());
+}
+
+/*************** Random End ***********************/
+
+/*************** Define Begin ***********************/
 struct HitRecord{
 	float t;
 	vec3 position;
@@ -15,6 +57,30 @@ struct Ray{
     vec3 direction;
 };
 
+struct Sphere{
+    vec3 center;
+    float radius;
+}; 
+
+struct World{
+    int objectCount;
+    Sphere objects[10];
+};
+
+struct Camera {
+    vec3 lower_left_corner;
+    vec3 horizontal;
+    vec3 vertical;
+    vec3 origin;
+}; 
+
+/*************** Define End ***********************/
+
+/*************** Uniform Begin ***********************/
+uniform Camera camera;
+uniform vec2 screenSize;
+/*************** Uniform End ***********************/
+
 Ray CreateRay(vec3 o, vec3 d){
     Ray ray;
     ray.origin = o;
@@ -23,14 +89,18 @@ Ray CreateRay(vec3 o, vec3 d){
     return ray;
 }
 
+Ray CameraGetRay(Camera camera, vec2 uv){
+	Ray ray = CreateRay(camera.origin, 
+		camera.lower_left_corner + 
+		uv.x * camera.horizontal + 
+		uv.y * camera.vertical - camera.origin);
+
+	return ray;
+}
+
 vec3 GetRayLocation(Ray ray, float t){
     return ray.origin + t * ray.direction;
 }
-
-struct Sphere{
-    vec3 center;
-    float radius;
-}; 
 
 Sphere CreateSphere(vec3 center, float radius){
 	Sphere sphere;
@@ -73,10 +143,6 @@ bool HitSphere(Sphere sphere, Ray ray, float t_min, float t_max, inout HitRecord
 	return false;
 }
 
-struct World{
-    int objectCount;
-    Sphere objects[10];
-};
 
 World CreateWorld(){
     World world;
@@ -105,13 +171,6 @@ bool HitWorld(World world, Ray ray, float t_min, float t_max, inout HitRecord re
 	return hitanything;
 }
 
-struct Camera {
-    vec3 lower_left_corner;
-    vec3 horizontal;
-    vec3 vertical;
-    vec3 position;
-}; 
-
 vec3 RayTrace(Ray ray){
     World world = CreateWorld();
 
@@ -126,14 +185,20 @@ vec3 RayTrace(Ray ray){
 	return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
 }
 
-uniform Camera camera;
+vec3 GammaCorrection(vec3 c){
+	return pow(c, vec3(1.0 / 2.2));
+}
 
 void main(){
-    float u = screenCoord.x;
-    float v = screenCoord.y;
+    vec3 color = vec3(0.0, 0.0, 0.0);
+	int sampleCount = 100;
+	for(int i = 0; i < sampleCount; i++){
+		Ray ray = CameraGetRay(camera, screenCoord + rand2() / screenSize);
+		color += RayTrace(ray);
+	}
+	color /= sampleCount;
 
-    Ray ray = CreateRay(camera.position, camera.lower_left_corner + u * camera.horizontal + v * camera.vertical - camera.position );
-    vec3 color = RayTrace(ray);
+	color = GammaCorrection(color);
 
-    FragColor = vec4(color, 1.0);
+	FragColor = vec4(color, 1.0);
 }

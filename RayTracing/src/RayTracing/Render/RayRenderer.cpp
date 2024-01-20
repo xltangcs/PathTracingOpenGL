@@ -30,7 +30,8 @@ void RayRenderer::Render(Camera& camera)
     m_Shader->setVec3("camera.lower_left_corner", cameraPosition - glm::vec3(viewportWidht / 2.0f, viewportHeight / 2.0f, 1.0f));
     m_Shader->setVec3("camera.horizontal", glm::vec3(viewportWidht, 0.0f, 0.0f));
     m_Shader->setVec3("camera.vertical", glm::vec3(0.0f, viewportHeight, 0.0f));
-    m_Shader->setVec3("camera.position", cameraPosition);
+    m_Shader->setVec3("camera.origin", cameraPosition);
+    m_Shader->setVec2("screenSize", {width, height});
 
     glBindVertexArray(m_Plane.VAO);
     glDrawElements(GL_TRIANGLES, m_Plane.indices.size(), GL_UNSIGNED_INT, 0);
