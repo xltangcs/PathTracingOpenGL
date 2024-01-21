@@ -4,28 +4,39 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include "Core/Application.h"
+//#include <iostream>
 
-#include <iostream>
+static float Yoffset = 0.0f;
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	Yoffset = static_cast<float>(yoffset);
+	//std::cout << Yoffset << std::endl;
+	//printf("Mouse scroll\n");
+}
 
 Camera::Camera(float verticalFOV, float nearClip, float farClip, bool isrotation)
 	: m_VerticalFOV(verticalFOV), m_NearClip(nearClip), m_FarClip(farClip), isRotation(isrotation)
 {
 	m_ForwardDirection = glm::vec3(0, 0, -1);
 	m_Position = glm::vec3(0, 0, 3);
+
+	auto window = Application::Get().GetGLFWwindow();
+	glfwSetScrollCallback(window, scroll_callback);
+
 	RecalculateView();
-	//RecalculateProjection();
 }
 
 void Camera::OnUpdate(float ts)
 {
-	GLFWwindow* window = Application::Get().GetGLFWwindow();
 	int width, height;
+	auto window = Application::Get().GetGLFWwindow();
 	glfwGetFramebufferSize(window, &width, &height);
 	OnResize(width, height);
+
 	static bool isFirst = true;
 
-	auto IsKeyDown = [&window](int key) ->int {
+	auto IsKeyDown = [&window](int key) ->bool {
 		return glfwGetKey(window, key) == GLFW_PRESS || glfwGetKey(window, key) == GLFW_REPEAT;
 	};
 
@@ -104,6 +115,8 @@ void Camera::OnUpdate(float ts)
 		}
 	}
 
+	ProcessMouseScroll();
+
 	if (moved)
 	{
 		RecalculateView();
@@ -118,6 +131,17 @@ void Camera::OnResize(int width, int height)
 
 	m_ViewportWidth = width;
 	m_ViewportHeight = height;
+
+	RecalculateProjection();
+}
+
+void Camera::ProcessMouseScroll()
+{
+	m_VerticalFOV -= (float)Yoffset * 0.25f;
+	if (m_VerticalFOV < 1.0f)
+		m_VerticalFOV = 1.0f;
+	if (m_VerticalFOV > 80.0f)
+		m_VerticalFOV = 80.0f;
 
 	RecalculateProjection();
 }

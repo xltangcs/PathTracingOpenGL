@@ -2,6 +2,8 @@
 
 #include <glm/glm.hpp>
 
+#include "Core/Application.h"
+
 class Camera
 {
 public:
@@ -9,6 +11,7 @@ public:
 
 	void OnUpdate(float ts);
 	void OnResize(int width, int height);
+	void ProcessMouseScroll();
 
 	const glm::mat4& GetProjection() const { return m_Projection; }
 	const glm::mat4& GetInverseProjection() const { return m_InverseProjection; }

@@ -16,7 +16,7 @@
 #include "RayTracing/Render/FirstRenderer.h"
 #include "RayTracing/Render/ContainerRenderer.h"
 #include "RayTracing/Render/RayRenderer.h"
-
+#include "RayTracing/Render/PBR.h"
 
 class MyImGuiLayer : public ImGuiLayer
 {
@@ -24,6 +24,8 @@ public:
 	MyImGuiLayer()
 		:m_Camera(45.0f, 0.1f, 100.0f)
 	{
+		auto pbr = std::make_shared<PBR>();
+		m_Renderer.emplace_back(pbr);
 		auto ray = std::make_shared<RayRenderer>();
 		m_Renderer.emplace_back(ray);
 		auto first = std::make_shared<FirstRenderer>();

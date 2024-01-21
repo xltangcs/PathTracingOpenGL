@@ -12,3 +12,7 @@ bin-int/
 
 # Exclude
 !vendor/bin
+
+# assets
+RayTracing/assets/models/
+RayTracing/assets/textures/

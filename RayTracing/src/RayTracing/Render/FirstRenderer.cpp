@@ -7,7 +7,7 @@ FirstRenderer::FirstRenderer()
 
 void FirstRenderer::Render(Camera& camera)
 {
-    auto imageShader = std::make_shared<Shader>("./assets/shaders/Base.vs", "./assets/shaders/Base.fs");
+    auto imageShader = std::make_shared<Shader>("./assets/shaders/RayTracingFirst.vs", "./assets/shaders/RayTracingFirst.fs");
     if (!m_VAO)
     {
         float vertices[] = {
