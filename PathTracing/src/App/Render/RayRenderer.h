@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RayTracing/Renderer.h"
+#include "App/Renderer.h"
 
 class RayRenderer : public Renderer
 {

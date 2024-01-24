@@ -1,3 +1,6 @@
+#include <Windows.h>
+#include <cstdio>
+
 #include <memory>
 #include <vector>
 #include <iostream>
@@ -11,12 +14,13 @@
 
 #include "Core/Application.h"
 #include "Core/Image.h"
-#include "RayTracing/Camera.h"
-#include "RayTracing/Renderer.h"
-#include "RayTracing/Render/FirstRenderer.h"
-#include "RayTracing/Render/ContainerRenderer.h"
-#include "RayTracing/Render/RayRenderer.h"
-#include "RayTracing/Render/PBR.h"
+#include "App/Camera.h"
+#include "App/Renderer.h"
+#include "App/Render/FirstRenderer.h"
+#include "App/Render/ContainerRenderer.h"
+#include "App/Render/RayRenderer.h"
+#include "App/Render/PBR.h"
+#include "App/Render/PathTracing.h"
 
 class MyImGuiLayer : public ImGuiLayer
 {
@@ -24,6 +28,8 @@ public:
 	MyImGuiLayer()
 		:m_Camera(45.0f, 0.1f, 100.0f)
 	{
+		auto pathtracing = std::make_shared<PathTracing>();
+		m_Renderer.emplace_back(pathtracing);
 		auto pbr = std::make_shared<PBR>();
 		m_Renderer.emplace_back(pbr);
 		auto ray = std::make_shared<RayRenderer>();
@@ -81,6 +87,16 @@ int main()
 
 	RayTracing->PushImGuiLayer(myimguilayer);
 	RayTracing->Run();
+
+
+	//const GLubyte* name = glGetString(GL_VENDOR); //返回负责当前OpenGL实现厂商的名字
+	//const GLubyte* biaoshifu = glGetString(GL_RENDERER); //返回一个渲染器标识符，通常是个硬件平台
+	//const GLubyte* OpenGLVersion = glGetString(GL_VERSION); //返回当前OpenGL实现的版本号
+	//printf("OpenGL实现厂商的名字：%s\n", name);
+	//printf("渲染器标识符：%s\n", biaoshifu);
+	//printf("OpenGL实现的版本号：%s\n", OpenGLVersion);
+	//system("pause");
+
 
 	return 0;
 }

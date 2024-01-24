@@ -6,11 +6,11 @@
 
 //#include <iostream>
 
-static float Yoffset = 0.0f;
+static float m_Yoffset = 0.0f;
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	Yoffset = static_cast<float>(yoffset);
+	m_Yoffset = static_cast<float>(yoffset);
 	//std::cout << Yoffset << std::endl;
 	//printf("Mouse scroll\n");
 }
@@ -114,8 +114,11 @@ void Camera::OnUpdate(float ts)
 			moved = true;
 		}
 	}
-
-	ProcessMouseScroll();
+	if (m_Yoffset)
+	{
+		ProcessMouseScroll();
+	}
+	
 
 	if (moved)
 	{
@@ -137,7 +140,7 @@ void Camera::OnResize(int width, int height)
 
 void Camera::ProcessMouseScroll()
 {
-	m_VerticalFOV -= (float)Yoffset * 0.25f;
+	m_VerticalFOV -= (float)m_Yoffset * 0.25f;
 	if (m_VerticalFOV < 1.0f)
 		m_VerticalFOV = 1.0f;
 	if (m_VerticalFOV > 80.0f)

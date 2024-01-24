@@ -1,4 +1,4 @@
-project "RayTracing"  --modify
+project "PathTracing"  --modify
    kind "ConsoleApp"
    language "C++"
    cppdialect "C++17"

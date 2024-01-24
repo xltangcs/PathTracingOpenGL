@@ -8,7 +8,7 @@
 #include "Core/Image.h"
 #include "Core/Shader.h"
 
-#include <RayTracing/Camera.h>
+#include <App/Camera.h>
 
 class Renderer {
 public:
