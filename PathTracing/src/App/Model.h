@@ -9,9 +9,10 @@
 class Model
 {
 public:
+    Model() = default;
     Model(const std::string& filename);
     bool LoadFromFile(const std::string& filename);
 
-    std::vector<Triangle> modelTriangles;
-    std::string m_Name;
+    std::vector<Triangle> Triangles;
+    std::string Name;
 };

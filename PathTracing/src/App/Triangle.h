@@ -11,7 +11,7 @@ struct Triangle {
     Triangle(const std::vector<glm::vec3>& p, const std::vector<glm::vec3>& n) : position(p), normal(n) {}
 };
 
-struct Triangle_encoded {
+struct TriangleEncoded {
     glm::vec3 p1, p2, p3;    // 顶点坐标
     glm::vec3 n1, n2, n3;    // 顶点法线
     

@@ -223,6 +223,6 @@ void main()
     HitResult res = hitArray(ray, 0, nTriangles-1);
 
     if(res.isHit) fragColor = vec4(res.material.baseColor, 1);
-    else fragColor = vec4(0.6, 0.2, 0.3, 1);
+    else fragColor = vec4(0.2, 0.2, 0.3, 1);
 
 }

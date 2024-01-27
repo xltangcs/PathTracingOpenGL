@@ -13,7 +13,7 @@ Model::Model(const std::string& filename)
 
 bool Model::LoadFromFile(const std::string& filename)
 {
-    m_Name = filename;
+    Name = filename;
 
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -71,14 +71,14 @@ bool Model::LoadFromFile(const std::string& filename)
                 }
                 //coord = {tx, ty};
             }
-            modelTriangles.emplace_back(Triangle(position, normal));
+            Triangles.emplace_back(Triangle(position, normal));
             index_offset += shapes[s].mesh.num_face_vertices[f];
         }
-        //std::cout << "Triangle size is " << modelTriangles.size() << std::endl;
+        //std::cout << "Triangle size is " << Triangles.size() << std::endl;
     }
-    std::cout << "Load model " << filename << " successfully!\n";
-    std::cout <<"There are " << modelTriangles.size() <<" Triangles.\n";
-    //std::cout << "address is " << &modelTriangles[0] << "\n";
+    //std::cout << "Load model " << filename << " successfully!\n";
+    //std::cout <<"There are " << Triangles.size() <<" Triangles.\n";
+    //std::cout << "address is " << &Triangles[0] << "\n";
 
     return true;
 }
