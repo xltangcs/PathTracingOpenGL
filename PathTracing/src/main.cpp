@@ -18,7 +18,7 @@
 #include "App/Renderer.h"
 #include "App/Render/FirstRenderer.h"
 #include "App/Render/ContainerRenderer.h"
-#include "App/Render/RayRenderer.h"
+#include "App/Render/RayTracing.h"
 #include "App/Render/PBR.h"
 #include "App/Render/PathTracing.h"
 
@@ -32,7 +32,7 @@ public:
 		m_Renderer.emplace_back(pathtracing);
 		auto pbr = std::make_shared<PBR>();
 		m_Renderer.emplace_back(pbr);
-		auto ray = std::make_shared<RayRenderer>();
+		auto ray = std::make_shared<RayTracing>();
 		m_Renderer.emplace_back(ray);
 		auto first = std::make_shared<FirstRenderer>();
 		m_Renderer.emplace_back(first);

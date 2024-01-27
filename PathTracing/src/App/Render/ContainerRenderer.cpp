@@ -8,7 +8,7 @@ ContainerRenderer::ContainerRenderer()
 void ContainerRenderer::Render(Camera& camera)
 {
     auto containerImage = std::make_shared<Image>("./assets/textures/container.jpg");
-    auto containerShader = std::make_shared<Shader>("./assets/shaders/Base.vs", "./assets/shaders/Base.fs");
+    auto containerShader = std::make_shared<Shader>("./assets/shaders/ContainerRenderer.vert", "./assets/shaders/ContainerRenderer.frag");
     // world space positions of our cubes
     glm::vec3 cubePositions[] = {
         glm::vec3(0.0f,  0.0f,  0.0f),

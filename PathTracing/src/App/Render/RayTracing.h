@@ -2,9 +2,9 @@
 
 #include "App/Renderer.h"
 
-class RayRenderer : public Renderer
+class RayTracing : public Renderer
 {
 public:
-	RayRenderer();
+	RayTracing();
 	virtual void Render(Camera& camera) override;
 };

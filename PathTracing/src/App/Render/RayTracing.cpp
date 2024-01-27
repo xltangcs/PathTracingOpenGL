@@ -1,14 +1,14 @@
-#include "RayRenderer.h"
+#include "RayTracing.h"
 
 #include "Core/Geometry/PlaneGeometry.h"
 
-RayRenderer::RayRenderer()
+RayTracing::RayTracing()
 	:Renderer("Ray Renderer")
 {
 
 }
 
-void RayRenderer::Render(Camera& camera)
+void RayTracing::Render(Camera& camera)
 {
 	auto m_Shader = std::make_shared<Shader>("./assets/shaders/RayTracing.vs", "./assets/shaders/RayTracing.fs");
 	PlaneGeometry m_Plane(2.0f, 2.0f);

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PLANE_GROMETRY
+#define PLANE_GROMETRY
 
 #include "Core/Geometry/BufferGeometry.h"
 
@@ -58,3 +59,5 @@ public:
         this->setupBuffers();
     }
 };
+
+#endif

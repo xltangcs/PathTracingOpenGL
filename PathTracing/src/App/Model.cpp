@@ -42,11 +42,17 @@ bool Model::LoadFromFile(const std::string& filename)
                 tinyobj::real_t vz = attrib.vertices[3 * idx.vertex_index + 2];
                 position.push_back(glm::vec3(vx, vy, vz));
 
-                tinyobj::real_t nx = attrib.vertices[3 * idx.normal_index + 0];
-                tinyobj::real_t ny = attrib.vertices[3 * idx.normal_index + 1];
-                tinyobj::real_t nz = attrib.vertices[3 * idx.normal_index + 2];
-                normal.push_back(glm::vec3(nx, ny, nz));
-
+                if (!attrib.normals.empty())
+                {
+                    tinyobj::real_t nx = attrib.vertices[3 * idx.normal_index + 0];
+                    tinyobj::real_t ny = attrib.vertices[3 * idx.normal_index + 1];
+                    tinyobj::real_t nz = attrib.vertices[3 * idx.normal_index + 2];
+                    normal.push_back(glm::vec3(nx, ny, nz));
+                }
+                else
+                {
+                    normal.push_back(glm::vec3(-1, -1, -1));
+                }
                 tinyobj::real_t tx, ty;
 
                 if (!attrib.texcoords.empty())
@@ -72,6 +78,7 @@ bool Model::LoadFromFile(const std::string& filename)
     }
     std::cout << "Load model " << filename << " successfully!\n";
     std::cout <<"There are " << modelTriangles.size() <<" Triangles.\n";
+    //std::cout << "address is " << &modelTriangles[0] << "\n";
 
     return true;
 }
