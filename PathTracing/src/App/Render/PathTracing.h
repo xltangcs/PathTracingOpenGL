@@ -6,6 +6,7 @@
 #include "App/Triangle.h"
 #include "App/Material.h"
 #include "App/Scene.h"
+#include "App/BVH.h"
 
 
 
@@ -18,7 +19,8 @@ public:
 	GLuint CreatTextureBuffer(int size, const void* data);
 
 private:
-	GLuint m_TrianglesTextureBuffer;
+	GLuint m_TrianglesTexture;
+	GLuint m_BVHNodesTexture;
 
 	PlaneGeometry m_Plane;
 

@@ -12,3 +12,6 @@ bin-int/
 
 # Exclude
 !vendor/bin
+
+# exe
+**.exe

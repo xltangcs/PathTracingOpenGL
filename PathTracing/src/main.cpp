@@ -20,7 +20,11 @@
 #include "App/Render/ContainerRenderer.h"
 #include "App/Render/RayTracing.h"
 #include "App/Render/PBR.h"
-#include "App/Render/PathTracing.h"
+//#include "App/Render/PathTracing.h"
+#include "App/Render/EzRT.h"
+
+
+bool setBVH = 0;
 
 class MyImGuiLayer : public ImGuiLayer
 {
@@ -28,8 +32,11 @@ public:
 	MyImGuiLayer()
 		:m_Camera(45.0f, 0.1f, 100.0f)
 	{
-		auto pathtracing = std::make_shared<PathTracing>();
-		m_Renderer.emplace_back(pathtracing);
+		auto ezrt = std::make_shared<EzRT>();
+		m_Renderer.emplace_back(ezrt);
+
+		//auto pathtracing = std::make_shared<PathTracing>();
+		//m_Renderer.emplace_back(pathtracing);
 		auto pbr = std::make_shared<PBR>();
 		m_Renderer.emplace_back(pbr);
 		auto ray = std::make_shared<RayTracing>();
@@ -62,6 +69,9 @@ public:
 		ImGui::DragFloat3("Camera Position", glm::value_ptr(m_Camera.GetPosition()));
 		ImGui::DragFloat3("Camera Direction", glm::value_ptr(m_Camera.GetDirection()));
 		ImGui::Checkbox("Camera Rotation", &m_Camera.GetIsRotation());
+
+		ImGui::Checkbox("BVH", &setBVH);
+
 
 		ImGui::End();
 	}

@@ -4,14 +4,20 @@ out vec4 fragColor;
 in vec3 pix;
 
 uniform int frameCounter;
+
 uniform int nTriangles;
+uniform int nNodes;
+
 uniform int width;
 uniform int height;
 
-uniform samplerBuffer triangles;
+uniform samplerBuffer TrianglesTexture;
+uniform samplerBuffer BVHNodesTexture;
 
-uniform vec3 eye;
+uniform vec3 cameraPosition;
 uniform vec3 cameraRotate;
+
+uniform int setBVH;
 
 
 // ----------------------------------------------------------------------------- //
@@ -27,6 +33,16 @@ uniform vec3 cameraRotate;
 struct Triangle {
     vec3 p1, p2, p3;    // 顶点坐标
     vec3 n1, n2, n3;    // 顶点法线
+};
+
+// BVH 树节点
+struct BVHNode {
+    int left;           // 左子树
+    int right;          // 右子树
+    int n;              // 包含三角形数目
+    int index;          // 三角形索引
+    bool isLeaf;
+    vec3 AA, BB;        // 碰撞盒
 };
 
 // 光线
@@ -72,13 +88,13 @@ Triangle getTriangle(int i) {
     Triangle t;
 
     // 顶点坐标
-    t.p1 = texelFetch(triangles, offset + 0).xyz;
-    t.p2 = texelFetch(triangles, offset + 1).xyz;
-    t.p3 = texelFetch(triangles, offset + 2).xyz;
-    // 法线
-    t.n1 = texelFetch(triangles, offset + 3).xyz;
-    t.n2 = texelFetch(triangles, offset + 4).xyz;
-    t.n3 = texelFetch(triangles, offset + 5).xyz;
+    t.p1 = texelFetch(TrianglesTexture, offset + 0).xyz;
+    t.p2 = texelFetch(TrianglesTexture, offset + 1).xyz;
+    t.p3 = texelFetch(TrianglesTexture, offset + 2).xyz;
+    // 法线           
+    t.n1 = texelFetch(TrianglesTexture, offset + 3).xyz;
+    t.n2 = texelFetch(TrianglesTexture, offset + 4).xyz;
+    t.n3 = texelFetch(TrianglesTexture, offset + 5).xyz;
 
     return t;
 }
@@ -87,13 +103,13 @@ Material getMaterial(int i) {
     Material m;
 
     int offset = i * SIZE_TRIANGLE;
-    vec3 param1 = texelFetch(triangles, offset + 8).xyz;
-    vec3 param2 = texelFetch(triangles, offset + 9).xyz;
-    vec3 param3 = texelFetch(triangles, offset + 10).xyz;
-    vec3 param4 = texelFetch(triangles, offset + 11).xyz;
+    vec3 param1 = texelFetch(TrianglesTexture, offset + 8).xyz;
+    vec3 param2 = texelFetch(TrianglesTexture, offset + 9).xyz;
+    vec3 param3 = texelFetch(TrianglesTexture, offset + 10).xyz;
+    vec3 param4 = texelFetch(TrianglesTexture, offset + 11).xyz;
     
-    m.emissive = texelFetch(triangles, offset + 6).xyz;
-    m.baseColor = texelFetch(triangles, offset + 7).xyz;
+    m.emissive = texelFetch(TrianglesTexture, offset + 6).xyz;
+    m.baseColor = texelFetch(TrianglesTexture, offset + 7).xyz;
     m.subsurface = param1.x;
     m.metallic = param1.y;
     m.specular = param1.z;
@@ -108,6 +124,27 @@ Material getMaterial(int i) {
     m.transmission = param4.z;
 
     return m;
+}
+
+// 获取第 i 下标的 BVHNode 对象
+BVHNode getBVHNode(int i) {
+    BVHNode node;
+
+    // 左右子树
+    int offset = i * SIZE_BVHNODE;
+    ivec3 childs = ivec3(texelFetch(BVHNodesTexture, offset + 0).xyz);
+    ivec3 leafInfo = ivec3(texelFetch(BVHNodesTexture, offset + 1).xyz);
+    node.left = int(childs.x);
+    node.right = int(childs.y);
+    node.n = int(leafInfo.x);
+    node.index = int(leafInfo.y);
+    node.isLeaf = int(leafInfo.z) == 1;
+
+    // 包围盒
+    node.AA = texelFetch(BVHNodesTexture, offset + 2).xyz;
+    node.BB = texelFetch(BVHNodesTexture, offset + 3).xyz;
+
+    return node;
 }
 // ----------------------------------------------------------------------------- //
 
@@ -194,6 +231,22 @@ HitResult hitTriangle(Triangle triangle, Ray ray) {
     return res;
 }
 
+// 和 aabb 盒子求交，没有交点则返回 -1
+float hitAABB(Ray r, vec3 AA, vec3 BB) {
+    vec3 invdir = 1.0 / r.direction;
+
+    vec3 f = (BB - r.startPoint) * invdir;
+    vec3 n = (AA - r.startPoint) * invdir;
+
+    vec3 tmax = max(f, n);
+    vec3 tmin = min(f, n);
+
+    float t1 = min(tmax.x, min(tmax.y, tmax.z));
+    float t0 = max(tmin.x, max(tmin.y, tmin.z));
+
+    return (t1 >= t0) ? ((t0 > 0.0) ? (t0) : (t1)) : (-1);
+}
+
 // ----------------------------------------------------------------------------- //
 
 // 暴力遍历数组下标范围 [l, r] 求最近交点
@@ -212,17 +265,132 @@ HitResult hitArray(Ray ray, int l, int r) {
     return res;
 }
 
+
+// 遍历 BVH 求交
+HitResult hitBVH(Ray ray) {
+    HitResult res;
+    res.isHit = false;
+    res.distance = INF;
+
+    // 栈
+    int stack[256];
+    int sp = 0;
+
+    stack[sp++] = 1;
+    while(sp>0) {
+        int top = stack[--sp];
+        BVHNode node = getBVHNode(top);
+        
+        // 是叶子节点，遍历三角形，求最近交点
+        if(node.n>0) {
+            int L = node.index;
+            int R = node.index + node.n - 1;
+            HitResult r = hitArray(ray, L, R);
+            if(r.isHit && r.distance<res.distance) res = r;
+            //continue;
+            break;
+        }
+        
+        // 和左右盒子 AABB 求交
+        float d1 = INF; // 左盒子距离
+        float d2 = INF; // 右盒子距离
+        if(node.left>0) {
+            BVHNode leftNode = getBVHNode(node.left);
+            d1 = hitAABB(ray, leftNode.AA, leftNode.BB);
+        }
+        if(node.right>0) {
+            BVHNode rightNode = getBVHNode(node.right);
+            d2 = hitAABB(ray, rightNode.AA, rightNode.BB);
+        }
+
+        // 在最近的盒子中搜索
+        if(d1>0 && d2>0) {
+            if(d1<d2) { // d1<d2, 左边先
+                stack[sp++] = node.right;
+                stack[sp++] = node.left;
+            } else {    // d2<d1, 右边先
+                stack[sp++] = node.left;
+                stack[sp++] = node.right;
+            }
+        } else if(d1>0) {   // 仅命中左边
+            stack[sp++] = node.left;
+        } else if(d2>0) {   // 仅命中右边
+            stack[sp++] = node.right;
+        }
+    }
+
+    return res;
+}
+
 void main()
 {
     // 投射光线
     Ray ray;
-    ray.startPoint = vec3(0, 0, 4);
-    vec3 dir = vec3(pix.xy, 2) - ray.startPoint;
+    ray.startPoint = cameraPosition;
+    vec3 dir = vec3(pix.xy, -1) - ray.startPoint;
     ray.direction = normalize(dir);
 
-    HitResult res = hitArray(ray, 0, nTriangles-1);
+    //fragColor = vec4(nNodes == 15, 0, 0, 0);
 
-    if(res.isHit) fragColor = vec4(res.material.baseColor, 1);
-    else fragColor = vec4(0.2, 0.2, 0.3, 1);
+    //for(int i=0; i<nNodes; i++)
+    //{
+    //    BVHNode node = getBVHNode(i);
+    //    //if(node.left == 6 && node.right ==8 && i==9)
+    //    if(node.n == 3 && node.index == 6 && node.isLeaf == false)
+    //        fragColor = vec4(1, 0, 0, 0);
+    //}
 
+    //if(node.isLeaf)
+    //{
+    //    Triangle triangle = getTriangle(node.index);
+    //    HitResult res = hitArray(ray, node.index, node.index);
+    //    fragColor = vec4(res.material.baseColor, 0);
+    //}
+
+
+    //for(int i=0; i<nNodes; i++)
+    //{
+    //    BVHNode node = getBVHNode(i);
+    //    if(node.isLeaf)  //leaf
+    //    {
+    //        int L = node.index;
+    //        int R = node.index + node.n - 1;
+    //        HitResult res = hitArray(ray, L, R);
+    //        if(res.isHit){
+    //            fragColor = vec4(res.material.baseColor, 1);
+    //        }
+    //    }
+    //}  
+
+    //BVHNode node = getBVHNode(0);
+    //BVHNode left = getBVHNode(node.left);
+    //BVHNode right = getBVHNode(node.right);
+    //float r1 = hitAABB(ray, left.AA, left.BB);  
+    //float r2 = hitAABB(ray, right.AA, right.BB); 
+    //
+    //vec3 color;
+    //if(r1>0) color = vec3(1, 0, 0);
+    //if(r2>0) color = vec3(0, 1, 0);
+    //if(r1>0 && r2>0) color = vec3(1, 1, 0);
+    //fragColor = vec4(color, 1);
+
+
+
+    HitResult res;
+    if(setBVH == 0)
+    {
+        res = hitArray(ray, 0, nTriangles-1);
+        fragColor = vec4(res.material.baseColor.x, 0, 0, 1);
+    }
+    //res = hitArray(ray, 0, nTriangles-1);
+    else
+    {
+        res = hitBVH(ray);
+        fragColor = vec4(0, res.material.baseColor.y, 0, 1);
+    }
+    //res = hitBVH(ray);
+
+    //if(res.isHit) fragColor = vec4(res.material.baseColor, 1);
+    //else 
+    //fragColor = vec4(0.2, 0.2, 0.3, 1);
 }
