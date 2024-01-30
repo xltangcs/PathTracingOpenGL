@@ -1,8 +1,9 @@
 #pragma once
 
+#include "App/Material.h"
+
 #include <glm/glm.hpp>
 
-#include "App/Material.h"
 // 三角形定义
 struct Triangle {
     std::vector<glm::vec3> position;    // 顶点坐标
@@ -12,8 +13,11 @@ struct Triangle {
 };
 
 struct TriangleEncoded {
-    glm::vec3 p1, p2, p3;    // 顶点坐标
-    glm::vec3 n1, n2, n3;    // 顶点法线
+    //std::vector<glm::vec3> position;    // 顶点坐标
+    //std::vector<glm::vec3> normal;    // 顶点法线
+
+    glm::vec3 p1, p2, p3;    //vertex
+    glm::vec3 n1, n2, n3;    //normal
     
     glm::vec3 emissive;      // 自发光参数
     glm::vec3 baseColor;     // 颜色

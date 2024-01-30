@@ -15,6 +15,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "App/HDRLoader.h"
+#include "App/BVH.h"
 
 #define INF 114514.0
 
@@ -146,25 +147,6 @@ RenderPass pass3;
 float upAngle = 0.0;
 float rotatAngle = 0.0;
 float r = 4.0;
-
-// ----------------------------------------------------------------------------- //
-
-// 按照三角形中心排序 -- 比较函数
-bool cmpx(const Triangle& t1, const Triangle& t2) {
-    vec3 center1 = (t1.p1 + t1.p2 + t1.p3) / vec3(3, 3, 3);
-    vec3 center2 = (t2.p1 + t2.p2 + t2.p3) / vec3(3, 3, 3);
-    return center1.x < center2.x;
-}
-bool cmpy(const Triangle& t1, const Triangle& t2) {
-    vec3 center1 = (t1.p1 + t1.p2 + t1.p3) / vec3(3, 3, 3);
-    vec3 center2 = (t2.p1 + t2.p2 + t2.p3) / vec3(3, 3, 3);
-    return center1.y < center2.y;
-}
-bool cmpz(const Triangle& t1, const Triangle& t2) {
-    vec3 center1 = (t1.p1 + t1.p2 + t1.p3) / vec3(3, 3, 3);
-    vec3 center2 = (t2.p1 + t2.p2 + t2.p3) / vec3(3, 3, 3);
-    return center1.z < center2.z;
-}
 
 // ----------------------------------------------------------------------------- //
 

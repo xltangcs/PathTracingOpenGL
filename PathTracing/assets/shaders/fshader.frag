@@ -19,6 +19,7 @@ uniform vec3 cameraRotate;
 
 uniform int setBVH;
 
+int maxBounce = 2;
 
 // ----------------------------------------------------------------------------- //
 
@@ -171,6 +172,25 @@ float rand() {
     return float(wang_hash(seed)) / 4294967296.0;
 }
 
+// ----------------------------------------------------------------------------- //
+
+// 半球均匀采样
+vec3 SampleHemisphere() {
+    float z = rand();
+    float r = max(0, sqrt(1.0 - z*z));
+    float phi = 2.0 * PI * rand();
+    return vec3(r * cos(phi), r * sin(phi), z);
+}
+
+// 将向量 v 投影到 N 的法向半球
+vec3 toNormalHemisphere(vec3 v, vec3 N) {
+    vec3 helper = vec3(1, 0, 0);
+    if(abs(N.x)>0.999) helper = vec3(0, 0, 1);
+    vec3 tangent = normalize(cross(N, helper));
+    vec3 bitangent = normalize(cross(N, tangent));
+    return v.x * tangent + v.y * bitangent + v.z * N;
+}
+
 
 // ----------------------------------------------------------------------------- //
 
@@ -265,7 +285,7 @@ HitResult hitArray(Ray ray, int l, int r) {
     return res;
 }
 
-
+int cnt = 0;
 // 遍历 BVH 求交
 HitResult hitBVH(Ray ray) {
     HitResult res;
@@ -273,12 +293,13 @@ HitResult hitBVH(Ray ray) {
     res.distance = INF;
 
     // 栈
-    int stack[256];
+    int stack[512];
     int sp = 0;
 
-    stack[sp++] = 1;
+    stack[sp++] = 3;
     while(sp>0) {
         int top = stack[--sp];
+        cnt ++;
         BVHNode node = getBVHNode(top);
         
         // 是叶子节点，遍历三角形，求最近交点
@@ -322,6 +343,49 @@ HitResult hitBVH(Ray ray) {
     return res;
 }
 
+// ----------------------------------------------------------------------------- //
+
+// 路径追踪
+vec3 pathTracing(HitResult hit, int maxBounce) {
+
+    vec3 Lo = vec3(0);      // 最终的颜色
+    vec3 history = vec3(1); // 递归积累的颜色
+
+    for(int bounce=0; bounce<maxBounce; bounce++) {
+        // 随机出射方向 wi
+        vec3 wi = toNormalHemisphere(SampleHemisphere(), hit.normal);
+
+        // 漫反射: 随机发射光线
+        Ray randomRay;
+        randomRay.startPoint = hit.hitPoint;
+        randomRay.direction = wi;
+        HitResult newHit = hitBVH(randomRay);
+
+        float pdf = 1.0 / (2.0 * PI);                                   // 半球均匀采样概率密度
+        float cosine_o = max(0, dot(-hit.viewDir, hit.normal));         // 入射光和法线夹角余弦
+        float cosine_i = max(0, dot(randomRay.direction, hit.normal));  // 出射光和法线夹角余弦
+        vec3 f_r = hit.material.baseColor / PI;                         // 漫反射 BRDF
+
+        // 未命中
+        if(!newHit.isHit) {
+            //vec3 skyColor = sampleHdr(randomRay.direction);
+            vec3 skyColor = vec3(0, 0, 0); 
+            Lo += history * skyColor * f_r * cosine_i / pdf;
+            break;
+        }
+        
+        // 命中光源积累颜色
+        vec3 Le = newHit.material.emissive;
+        Lo += history * Le * f_r * cosine_i / pdf;
+        
+        // 递归(步进)
+        hit = newHit;
+        history *= f_r * cosine_i / pdf;  // 累积颜色
+    }
+    
+    return Lo;
+}
+
 void main()
 {
     // 投射光线
@@ -330,67 +394,22 @@ void main()
     vec3 dir = vec3(pix.xy, -1) - ray.startPoint;
     ray.direction = normalize(dir);
 
-    //fragColor = vec4(nNodes == 15, 0, 0, 0);
 
-    //for(int i=0; i<nNodes; i++)
-    //{
-    //    BVHNode node = getBVHNode(i);
-    //    //if(node.left == 6 && node.right ==8 && i==9)
-    //    if(node.n == 3 && node.index == 6 && node.isLeaf == false)
-    //        fragColor = vec4(1, 0, 0, 0);
-    //}
-
-    //if(node.isLeaf)
-    //{
-    //    Triangle triangle = getTriangle(node.index);
-    //    HitResult res = hitArray(ray, node.index, node.index);
-    //    fragColor = vec4(res.material.baseColor, 0);
-    //}
-
-
-    //for(int i=0; i<nNodes; i++)
-    //{
-    //    BVHNode node = getBVHNode(i);
-    //    if(node.isLeaf)  //leaf
-    //    {
-    //        int L = node.index;
-    //        int R = node.index + node.n - 1;
-    //        HitResult res = hitArray(ray, L, R);
-    //        if(res.isHit){
-    //            fragColor = vec4(res.material.baseColor, 1);
-    //        }
-    //    }
-    //}  
-
-    //BVHNode node = getBVHNode(0);
-    //BVHNode left = getBVHNode(node.left);
-    //BVHNode right = getBVHNode(node.right);
-    //float r1 = hitAABB(ray, left.AA, left.BB);  
-    //float r2 = hitAABB(ray, right.AA, right.BB); 
-    //
+    // primary hit
+    HitResult res = hitBVH(ray);
+    //HitResult res = hitArray(ray, 0, nNodes-1);
+    if(res.isHit) fragColor = vec4(res.material.baseColor, 1);
     //vec3 color;
-    //if(r1>0) color = vec3(1, 0, 0);
-    //if(r2>0) color = vec3(0, 1, 0);
-    //if(r1>0 && r2>0) color = vec3(1, 1, 0);
-    //fragColor = vec4(color, 1);
-
-
-
-    HitResult res;
-    if(setBVH == 0)
-    {
-        res = hitArray(ray, 0, nTriangles-1);
-        fragColor = vec4(res.material.baseColor.x, 0, 0, 1);
-    }
-    //res = hitArray(ray, 0, nTriangles-1);
-    else
-    {
-        res = hitBVH(ray);
-        fragColor = vec4(0, res.material.baseColor.y, 0, 1);
-    }
-    //res = hitBVH(ray);
-
-    //if(res.isHit) fragColor = vec4(res.material.baseColor, 1);
-    //else 
-    //fragColor = vec4(0.2, 0.2, 0.3, 1);
+ 
+    //if(!firstHit.isHit) {
+    //    color = vec3(0);
+    //    //color = sampleHdr(ray.direction);
+    //} else {
+    //    vec3 Le = firstHit.material.emissive;
+    //
+    //    vec3 Li = pathTracing(firstHit, maxBounce);
+    //    color = Le + Li;
+    //}  
+    
+    //fragColor = vec4(color, 1.0);
 }

@@ -76,7 +76,7 @@ bool Model::LoadFromFile(const std::string& filename)
         }
         //std::cout << "Triangle size is " << Triangles.size() << std::endl;
     }
-    //std::cout << "Load model " << filename << " successfully!\n";
+    std::cout << "Load model " << filename << " successfully!\n";
     //std::cout <<"There are " << Triangles.size() <<" Triangles.\n";
     //std::cout << "address is " << &Triangles[0] << "\n";
 

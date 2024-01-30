@@ -22,6 +22,7 @@ struct BVHNodeEncoded {
 };
 
 
+
 class BVH
 {
 public:
@@ -29,7 +30,7 @@ public:
 	~BVH()= default;
 
 	BVHNode* buildBVH(std::vector<Triangle>& triangles, int left, int right);
-	BVHNode* buildBVHwithSAH(std::vector<Triangle>& triangles, int left, int right);
+	//BVHNode* buildBVHwithSAH(std::vector<Triangle>& triangles, int left, int right);
 
 	void flattenBVHTree(BVHNode* node);
 
@@ -42,7 +43,7 @@ private:
 	
 
 private:
-	int leafNum = 1;
+	int leafNum = 2;
 	int serialNum = 0;
 
 	std::vector<BVHNodeEncoded> m_BVHNodeEncodeeds;
