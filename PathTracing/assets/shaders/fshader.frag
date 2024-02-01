@@ -365,8 +365,8 @@ vec3 pathTracing(HitResult hit, int maxBounce) {
         // Î´ÃüÖÐ
         if(!newHit.isHit) {
             //vec3 skyColor = sampleHdr(randomRay.direction);
-            vec3 skyColor = vec3(0, 0, 0); 
-            Lo += history * skyColor * f_r * cosine_i / pdf;
+            //vec3 skyColor = vec3(0, 0, 0); 
+            //Lo += history * skyColor * f_r * cosine_i / pdf;
             break;
         }
         
@@ -390,60 +390,26 @@ void main()
     vec3 dir = vec3(pix.xy, -1) - ray.startPoint;
     ray.direction = normalize(dir);
 
-    //bool ishit = false;
-    //for(int i=0; i<nNodes; i++)
-    //{
-    //    BVHNode node = getBVHNode(i);
-    //    if(node.n > 0) {
-    //        int L = node.index;
-    //        int R = node.index + node.n - 1;
-    //        HitResult r = hitArray(ray, L, R);
-    //
-    //        if(r.isHit)
-    //        {
-    //            ishit = true;
-    //            break;
-    //        }
-    //    }
-    //}
-    //
-
-    //HitResult res = hitArray(ray, 0, nTriangles-1);
-    HitResult res = hitBVH(ray);
-
-    //BVHNode node = getBVHNode(0);
-    //int L = node.index;
-    //int R = node.index + node.n - 1;
-    //HitResult res = hitArray(ray, L, R);
-
-
-    //if(res.isHit) fragColor = vec4(1, 0, 0, 1);
-    if(res.isHit) fragColor = vec4(res.material.baseColor, 1);
-    else fragColor = vec4(0, 1, 0, 1);
-
-
-
-
-    //if(res.isHit ) fragColor = vec4(1, 0, 0, 1);
-    //else fragColor = vec4(0, 0, 0, 1);
- 
-
 
     //primary hit
-    //HitResult res = hitBVH(ray);
-    //HitResult res = hitArray(ray, 0, nTriangles-1);
-
-    //vec3 color;
-
-    //if(!firstHit.isHit) {
-    //    color = vec3(0);
-    //    //color = sampleHdr(ray.direction);
-    //} else {
-    //    vec3 Le = firstHit.material.emissive;
-    //
-    //    vec3 Li = pathTracing(firstHit, maxBounce);
-    //    color = Le + Li;
-    //}  
+    HitResult firstHit = hitBVH(ray);
+    vec3 color;
     
-    //fragColor = vec4(color, 1.0);
+    if(!firstHit.isHit) 
+    {
+        color = vec3(0);
+    } 
+    else 
+    {
+        vec3 Le = firstHit.material.emissive;
+        vec3 Li = pathTracing(firstHit, maxBounce);
+        color = Le + Li;
+    }  
+    
+    fragColor = vec4(color, 1.0);
+
+    //if(frameCounter > 100 && frameCounter <= 150) fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    //else fragColor = vec4(0.0, 0.0, 1.0, 1.0);
+
+
 }

@@ -52,6 +52,7 @@ public:
 
 	virtual void Render(float ts) override
 	{
+		m_Renderer[m_CurrentIndex]->OnResize(m_Width, m_Height);
 		m_Renderer[m_CurrentIndex]->Render(m_Camera);
 	}
 
@@ -72,16 +73,23 @@ public:
 
 		ImGui::Checkbox("BVH", &setBVH);
 
-
 		ImGui::End();
 	}
 
 	virtual void OnUpdate(float ts) override
 	{
+		int width, height;
+		auto window = Application::Get().GetGLFWwindow();
+		glfwGetFramebufferSize(window, &width, &height);
+		m_Width = width; m_Height = height;
+
 		m_Camera.OnUpdate(ts);
+		
 	}
 
 private:
+	unsigned int m_Width = 0, m_Height = 0;
+
 	std::vector<std::shared_ptr<Renderer>> m_Renderer;
 	std::vector<const char*> m_RendererName;
 	int m_RendererIndex = 0;

@@ -17,8 +17,10 @@ PathTracing::PathTracing()
 	int quadId = m_Scene.AddModel("./assets/models/quad.obj");
 	Material blueColor;
 	blueColor.baseColor = glm::vec3(0.1f, 0.2f, 0.6f);
+	//blueColor.emissive = glm::vec3(0.2f, 0.0f, 0.0f);
 	int blueMatId = m_Scene.AddMaterial(blueColor);
 	glm::mat4 quadTrans = glm::mat4(1.0f);
+	quadTrans = glm::scale(quadTrans, glm::vec3(0.5f, 0.5f, 0.5f));
 	ModelInstance quad("Cube", quadId, quadTrans, blueMatId);
 	m_Scene.AddModelInstance(quad);
 
@@ -26,9 +28,10 @@ PathTracing::PathTracing()
 	int shpereId = m_Scene.AddModel("./assets/models/sphere.obj");
 	Material whiteColor;
 	whiteColor.baseColor = glm::vec3(0.9f, 0.9f, 0.9f);
+	whiteColor.emissive = glm::vec3(30.0f, 30.0f, 30.0f);
 	int whiteMatId = m_Scene.AddMaterial(whiteColor);
 	glm::mat4 sphereTrans = glm::mat4(1.0f);
-	sphereTrans = glm::translate(sphereTrans, glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(sphereTrans, glm::vec3(0.1f, 0.1f, 0.1f));
+	sphereTrans = glm::translate(sphereTrans, glm::vec3(0.0f, 0.5f, 0.5f)) * glm::scale(sphereTrans, glm::vec3(0.05f, 0.05f, 0.05f));
 	ModelInstance sphere("Sphere", shpereId, sphereTrans, whiteMatId);
 	m_Scene.AddModelInstance(sphere);
 
@@ -42,7 +45,7 @@ PathTracing::PathTracing()
 	bvh.translateBVHNodes(m_BVHNodeEncodeds);
 	int nBVHNodes = m_BVHNodeEncodeds.size();
 
-	bvh.printBVHNodeEncodeed(m_BVHNodeEncodeds);
+	//bvh.printBVHNodeEncodeed(m_BVHNodeEncodeds);
 
 	m_TrianglesTexture = CreatTextureBuffer(nTriangles * sizeof(TriangleEncoded), &m_TriangleEncodeds[0]);
 	m_BVHNodesTexture = CreatTextureBuffer(nBVHNodes * sizeof(BVHNodeEncoded), &m_BVHNodeEncodeds[0]);
@@ -58,6 +61,7 @@ PathTracing::PathTracing()
 void PathTracing::Render(Camera& camera)
 {
 	//std::cout <<" frame index :" << m_frameIndex++ << std::endl;
+	m_frameIndex++;
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_TEST);
 
@@ -69,7 +73,11 @@ void PathTracing::Render(Camera& camera)
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_BUFFER, m_BVHNodesTexture);
 	pass1Shader.setInt("BVHNodesTexture", 1);
+
 	pass1Shader.setInt("setBVH", setBVH);
+	pass1Shader.setInt("frameCounter", m_frameIndex);
+	pass1Shader.setInt("width", m_width);
+	pass1Shader.setInt("height", m_height);
 	pass1Shader.setVec3("cameraPosition", camera.GetPosition());
 
 	glBindVertexArray(m_Plane.VAO);
