@@ -8,7 +8,7 @@
 struct Triangle {
     std::vector<glm::vec3> position;    // 顶点坐标
     std::vector<glm::vec3> normal;    // 顶点法线
-    Material material;  // 材质
+    //Material material;  // 材质
     Triangle(const std::vector<glm::vec3>& p, const std::vector<glm::vec3>& n) : position(p), normal(n) {}
 };
 

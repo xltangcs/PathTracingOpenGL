@@ -1,5 +1,7 @@
 ﻿#include "PathTracing.h"
 
+#include <string>
+
 extern bool setBVH;
 
 PathTracing::PathTracing()
@@ -7,26 +9,43 @@ PathTracing::PathTracing()
 	m_PlaneShader("./assets/shaders/Base.vert", "./assets/shaders/Base.frag"),
 	pass1Shader("./assets/shaders/vshader.vert", "./assets/shaders/fshader.frag")
 {
-	m_Scene.AddModel("./assets/models/Stanford Bunny.obj");
-	//for (size_t i = 0; i < 1; i++)
-	//{
-	//	m_Scene.AddModel("./assets/models/quad.obj");
-	//}
-	//m_Scene.AddModel("./assets/models/quad.obj");
-	//m_Scene.AddModel("./assets/models/quadhalf.obj");
-	//m_Scene.AddModel("./assets/models/sphere.obj");
+	std::vector<TriangleEncoded> m_TriangleEncodeds;
+	std::vector<BVHNodeEncoded> m_BVHNodeEncodeds;
 
-	int nTriangles = m_Scene.GetTriangleNum();
+	//m_Scene.AddModel("./assets/models/Stanford Bunny.obj");
+
+	int quadId = m_Scene.AddModel("./assets/models/quad.obj");
+	Material blueColor;
+	blueColor.baseColor = glm::vec3(0.1f, 0.2f, 0.6f);
+	int blueMatId = m_Scene.AddMaterial(blueColor);
+	glm::mat4 quadTrans = glm::mat4(1.0f);
+	ModelInstance quad("Cube", quadId, quadTrans, blueMatId);
+	m_Scene.AddModelInstance(quad);
+
+
+	int shpereId = m_Scene.AddModel("./assets/models/sphere.obj");
+	Material whiteColor;
+	whiteColor.baseColor = glm::vec3(0.9f, 0.9f, 0.9f);
+	int whiteMatId = m_Scene.AddMaterial(whiteColor);
+	glm::mat4 sphereTrans = glm::mat4(1.0f);
+	sphereTrans = glm::translate(sphereTrans, glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(sphereTrans, glm::vec3(0.1f, 0.1f, 0.1f));
+	ModelInstance sphere("Sphere", shpereId, sphereTrans, whiteMatId);
+	m_Scene.AddModelInstance(sphere);
+
+
+	m_Scene.ProcessScene(m_TriangleEncodeds);
+
+	int nTriangles = m_TriangleEncodeds.size();
 	BVH bvh;
-	BVHNode* bvhNode = bvh.buildBVH(m_Scene.GetTriangles(), 0, nTriangles - 1);
-	bvh.flattenBVHTree(bvhNode);
+	bvh.buildBVH(m_TriangleEncodeds, 0, nTriangles - 1);
 
-	//bvh.printBVHNodeEncodeed();
+	bvh.translateBVHNodes(m_BVHNodeEncodeds);
+	int nBVHNodes = m_BVHNodeEncodeds.size();
 
-	int nBVHNodes = bvh.GetBVHNodeNum();
+	bvh.printBVHNodeEncodeed(m_BVHNodeEncodeds);
 
-	m_TrianglesTexture = CreatTextureBuffer(nTriangles * sizeof(TriangleEncoded), m_Scene.GetTriangleAddr());
-	m_BVHNodesTexture = CreatTextureBuffer(nBVHNodes * sizeof(BVHNodeEncoded), bvh.GetBVHNodeEncodedAddr());
+	m_TrianglesTexture = CreatTextureBuffer(nTriangles * sizeof(TriangleEncoded), &m_TriangleEncodeds[0]);
+	m_BVHNodesTexture = CreatTextureBuffer(nBVHNodes * sizeof(BVHNodeEncoded), &m_BVHNodeEncodeds[0]);
 
 	pass1Shader.use();
 	pass1Shader.setInt("nTriangles", nTriangles);

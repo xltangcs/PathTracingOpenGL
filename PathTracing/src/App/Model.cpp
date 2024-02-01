@@ -44,9 +44,9 @@ bool Model::LoadFromFile(const std::string& filename)
 
                 if (!attrib.normals.empty())
                 {
-                    tinyobj::real_t nx = attrib.vertices[3 * idx.normal_index + 0];
-                    tinyobj::real_t ny = attrib.vertices[3 * idx.normal_index + 1];
-                    tinyobj::real_t nz = attrib.vertices[3 * idx.normal_index + 2];
+                    tinyobj::real_t nx = attrib.normals[3 * idx.normal_index + 0];
+                    tinyobj::real_t ny = attrib.normals[3 * idx.normal_index + 1];
+                    tinyobj::real_t nz = attrib.normals[3 * idx.normal_index + 2];
                     normal.push_back(glm::vec3(nx, ny, nz));
                 }
                 else

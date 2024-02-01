@@ -285,21 +285,18 @@ HitResult hitArray(Ray ray, int l, int r) {
     return res;
 }
 
-int cnt = 0;
-// 遍历 BVH 求交
 HitResult hitBVH(Ray ray) {
     HitResult res;
     res.isHit = false;
     res.distance = INF;
 
     // 栈
-    int stack[512];
+    int stack[256];
     int sp = 0;
 
-    stack[sp++] = 3;
+    stack[sp++] = 0;
     while(sp>0) {
         int top = stack[--sp];
-        cnt ++;
         BVHNode node = getBVHNode(top);
         
         // 是叶子节点，遍历三角形，求最近交点
@@ -308,8 +305,7 @@ HitResult hitBVH(Ray ray) {
             int R = node.index + node.n - 1;
             HitResult r = hitArray(ray, L, R);
             if(r.isHit && r.distance<res.distance) res = r;
-            //continue;
-            break;
+            continue;
         }
         
         // 和左右盒子 AABB 求交
@@ -394,13 +390,51 @@ void main()
     vec3 dir = vec3(pix.xy, -1) - ray.startPoint;
     ray.direction = normalize(dir);
 
+    //bool ishit = false;
+    //for(int i=0; i<nNodes; i++)
+    //{
+    //    BVHNode node = getBVHNode(i);
+    //    if(node.n > 0) {
+    //        int L = node.index;
+    //        int R = node.index + node.n - 1;
+    //        HitResult r = hitArray(ray, L, R);
+    //
+    //        if(r.isHit)
+    //        {
+    //            ishit = true;
+    //            break;
+    //        }
+    //    }
+    //}
+    //
 
-    // primary hit
+    //HitResult res = hitArray(ray, 0, nTriangles-1);
     HitResult res = hitBVH(ray);
-    //HitResult res = hitArray(ray, 0, nNodes-1);
+
+    //BVHNode node = getBVHNode(0);
+    //int L = node.index;
+    //int R = node.index + node.n - 1;
+    //HitResult res = hitArray(ray, L, R);
+
+
+    //if(res.isHit) fragColor = vec4(1, 0, 0, 1);
     if(res.isHit) fragColor = vec4(res.material.baseColor, 1);
-    //vec3 color;
+    else fragColor = vec4(0, 1, 0, 1);
+
+
+
+
+    //if(res.isHit ) fragColor = vec4(1, 0, 0, 1);
+    //else fragColor = vec4(0, 0, 0, 1);
  
+
+
+    //primary hit
+    //HitResult res = hitBVH(ray);
+    //HitResult res = hitArray(ray, 0, nTriangles-1);
+
+    //vec3 color;
+
     //if(!firstHit.isHit) {
     //    color = vec3(0);
     //    //color = sampleHdr(ray.direction);

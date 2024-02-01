@@ -6,18 +6,18 @@
 
 struct BVHNode
 {
-	BVHNode* left = nullptr;
-	BVHNode* right = nullptr;
-	int n = -1;
-	int index = -1;
-	int isLeaf;
-	int SerialNum = 0;
+	//BVHNode* left = nullptr;
+	//BVHNode* right = nullptr;
+	int left = -1, right = -1;
+	int n = 0;
+	int index = 0;
+	int isLeaf = 0;
 	glm::vec3 AA, BB;
 };
 
 struct BVHNodeEncoded {
-	glm::vec3 childs = glm::vec3(-1, -1, -1);// (left, right, ±£¡Ù)
-	glm::vec3 leafInfo = glm::vec3(-1, -1, -1); // (n, index, isLeaf)
+	glm::vec3 childs;   // (left, right, ±£¡Ù)
+	glm::vec3 leafInfo; // (n, index, isLeaf)
 	glm::vec3 AA, BB;
 };
 
@@ -29,12 +29,14 @@ public:
 	BVH()= default;
 	~BVH()= default;
 
-	BVHNode* buildBVH(std::vector<Triangle>& triangles, int left, int right);
+	int buildBVH(std::vector<TriangleEncoded>& triangles, int left, int right);
 	//BVHNode* buildBVHwithSAH(std::vector<Triangle>& triangles, int left, int right);
 
 	void flattenBVHTree(BVHNode* node);
 
-	void printBVHNodeEncodeed();
+	void translateBVHNodes(std::vector<BVHNodeEncoded>& m_BVHNodeEncodeeds);
+
+	void printBVHNodeEncodeed(std::vector<BVHNodeEncoded>& bVHNodeEncodeeds);
 
 	const int GetBVHNodeNum() const { return m_BVHNodeEncodeeds.size(); }
 	const void* GetBVHNodeEncodedAddr() const { return &m_BVHNodeEncodeeds[0]; }
@@ -47,4 +49,5 @@ private:
 	int serialNum = 0;
 
 	std::vector<BVHNodeEncoded> m_BVHNodeEncodeeds;
+	std::vector<BVHNode> m_BVHNodes;
 };
