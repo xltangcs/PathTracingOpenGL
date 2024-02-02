@@ -18,7 +18,7 @@ int Scene::AddModel(const std::string& filename)
     id = m_Models.size();
     Model* model = new Model;
 
-    printf("Loading model %s\n", filename.c_str());
+    //printf("Loading model %s\n", filename.c_str());
     if (model->LoadFromFile(filename))
     {
         m_Models.push_back(model);

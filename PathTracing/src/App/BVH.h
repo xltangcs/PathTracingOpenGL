@@ -30,7 +30,9 @@ public:
 	~BVH()= default;
 
 	int buildBVH(std::vector<TriangleEncoded>& triangles, int left, int right);
-	//BVHNode* buildBVHwithSAH(std::vector<Triangle>& triangles, int left, int right);
+
+	int buildBVHwithSAH(std::vector<TriangleEncoded>& triangles, int left, int right);
+
 
 	void flattenBVHTree(BVHNode* node);
 
@@ -45,7 +47,7 @@ private:
 	
 
 private:
-	int leafNum = 2;
+	int leafNum = 8;
 	int serialNum = 0;
 
 	std::vector<BVHNodeEncoded> m_BVHNodeEncodeeds;

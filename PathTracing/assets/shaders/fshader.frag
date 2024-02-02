@@ -1,28 +1,24 @@
 #version 330 core
 
+in vec3 pix;
 out vec4 fragColor;
 
-in vec3 pix;
+// ----------------------------------------------------------------------------- //
 
 uniform int frameCounter;
-
 uniform int nTriangles;
 uniform int nNodes;
-
 uniform int width;
 uniform int height;
 
-uniform samplerBuffer TrianglesTexture;
-uniform samplerBuffer BVHNodesTexture;
+uniform samplerBuffer triangles;
+uniform samplerBuffer nodes;
 
 uniform sampler2D lastFrame;
+uniform sampler2D hdrMap;
 
-uniform vec3 cameraPosition;
-uniform vec3 cameraRotate;
-
-uniform int setBVH;
-
-int maxBounce = 2;
+uniform vec3 eye;
+uniform mat4 cameraRotate;
 
 // ----------------------------------------------------------------------------- //
 
@@ -45,14 +41,7 @@ struct BVHNode {
     int right;          // 右子树
     int n;              // 包含三角形数目
     int index;          // 三角形索引
-    bool isLeaf;
     vec3 AA, BB;        // 碰撞盒
-};
-
-// 光线
-struct Ray {
-    vec3 startPoint;
-    vec3 direction;
 };
 
 // 物体表面材质定义
@@ -73,6 +62,12 @@ struct Material {
     float transmission;
 };
 
+// 光线
+struct Ray {
+    vec3 startPoint;
+    vec3 direction;
+};
+
 // 光线求交结果
 struct HitResult {
     bool isHit;             // 是否命中
@@ -84,72 +79,6 @@ struct HitResult {
     Material material;      // 命中点的表面材质
 };
 
-// ----------------------------------------------------------------------------- //
-
-// 获取第 i 下标的三角形
-Triangle getTriangle(int i) {
-    int offset = i * SIZE_TRIANGLE;
-    Triangle t;
-
-    // 顶点坐标
-    t.p1 = texelFetch(TrianglesTexture, offset + 0).xyz;
-    t.p2 = texelFetch(TrianglesTexture, offset + 1).xyz;
-    t.p3 = texelFetch(TrianglesTexture, offset + 2).xyz;
-    // 法线           
-    t.n1 = texelFetch(TrianglesTexture, offset + 3).xyz;
-    t.n2 = texelFetch(TrianglesTexture, offset + 4).xyz;
-    t.n3 = texelFetch(TrianglesTexture, offset + 5).xyz;
-
-    return t;
-}
-// 获取第 i 下标的三角形的材质
-Material getMaterial(int i) {
-    Material m;
-
-    int offset = i * SIZE_TRIANGLE;
-    vec3 param1 = texelFetch(TrianglesTexture, offset + 8).xyz;
-    vec3 param2 = texelFetch(TrianglesTexture, offset + 9).xyz;
-    vec3 param3 = texelFetch(TrianglesTexture, offset + 10).xyz;
-    vec3 param4 = texelFetch(TrianglesTexture, offset + 11).xyz;
-    
-    m.emissive = texelFetch(TrianglesTexture, offset + 6).xyz;
-    m.baseColor = texelFetch(TrianglesTexture, offset + 7).xyz;
-    m.subsurface = param1.x;
-    m.metallic = param1.y;
-    m.specular = param1.z;
-    m.specularTint = param2.x;
-    m.roughness = param2.y;
-    m.anisotropic = param2.z;
-    m.sheen = param3.x;
-    m.sheenTint = param3.y;
-    m.clearcoat = param3.z;
-    m.clearcoatGloss = param4.x;
-    m.IOR = param4.y;
-    m.transmission = param4.z;
-
-    return m;
-}
-
-// 获取第 i 下标的 BVHNode 对象
-BVHNode getBVHNode(int i) {
-    BVHNode node;
-
-    // 左右子树
-    int offset = i * SIZE_BVHNODE;
-    ivec3 childs = ivec3(texelFetch(BVHNodesTexture, offset + 0).xyz);
-    ivec3 leafInfo = ivec3(texelFetch(BVHNodesTexture, offset + 1).xyz);
-    node.left = int(childs.x);
-    node.right = int(childs.y);
-    node.n = int(leafInfo.x);
-    node.index = int(leafInfo.y);
-    node.isLeaf = int(leafInfo.z) == 1;
-
-    // 包围盒
-    node.AA = texelFetch(BVHNodesTexture, offset + 2).xyz;
-    node.BB = texelFetch(BVHNodesTexture, offset + 3).xyz;
-
-    return node;
-}
 // ----------------------------------------------------------------------------- //
 
 /*
@@ -185,6 +114,7 @@ vec3 SampleHemisphere() {
     return vec3(r * cos(phi), r * sin(phi), z);
 }
 
+
 // 将向量 v 投影到 N 的法向半球
 vec3 toNormalHemisphere(vec3 v, vec3 N) {
     vec3 helper = vec3(1, 0, 0);
@@ -194,6 +124,91 @@ vec3 toNormalHemisphere(vec3 v, vec3 N) {
     return v.x * tangent + v.y * bitangent + v.z * N;
 }
 
+// ----------------------------------------------------------------------------- //
+
+// 将三维向量 v 转为 HDR map 的纹理坐标 uv
+vec2 SampleSphericalMap(vec3 v) {
+    vec2 uv = vec2(atan(v.z, v.x), asin(v.y));
+    uv /= vec2(2.0 * PI, PI);
+    uv += 0.5;
+    uv.y = 1.0 - uv.y;
+    return uv;
+}
+
+// 获取 HDR 环境颜色
+vec3 sampleHdr(vec3 v) {
+    vec2 uv = SampleSphericalMap(normalize(v));
+    vec3 color = texture2D(hdrMap, uv).rgb;
+    color = min(color, vec3(10));
+    return color;
+}
+
+// ----------------------------------------------------------------------------- //
+
+// 获取第 i 下标的三角形
+Triangle getTriangle(int i) {
+    int offset = i * SIZE_TRIANGLE;
+    Triangle t;
+
+    // 顶点坐标
+    t.p1 = texelFetch(triangles, offset + 0).xyz;
+    t.p2 = texelFetch(triangles, offset + 1).xyz;
+    t.p3 = texelFetch(triangles, offset + 2).xyz;
+    // 法线
+    t.n1 = texelFetch(triangles, offset + 3).xyz;
+    t.n2 = texelFetch(triangles, offset + 4).xyz;
+    t.n3 = texelFetch(triangles, offset + 5).xyz;
+
+    return t;
+}
+
+// 获取第 i 下标的三角形的材质
+Material getMaterial(int i) {
+    Material m;
+
+    int offset = i * SIZE_TRIANGLE;
+    vec3 param1 = texelFetch(triangles, offset + 8).xyz;
+    vec3 param2 = texelFetch(triangles, offset + 9).xyz;
+    vec3 param3 = texelFetch(triangles, offset + 10).xyz;
+    vec3 param4 = texelFetch(triangles, offset + 11).xyz;
+    
+    m.emissive = texelFetch(triangles, offset + 6).xyz;
+    m.baseColor = texelFetch(triangles, offset + 7).xyz;
+    m.subsurface = param1.x;
+    m.metallic = param1.y;
+    m.specular = param1.z;
+    m.specularTint = param2.x;
+    m.roughness = param2.y;
+    m.anisotropic = param2.z;
+    m.sheen = param3.x;
+    m.sheenTint = param3.y;
+    m.clearcoat = param3.z;
+    m.clearcoatGloss = param4.x;
+    m.IOR = param4.y;
+    m.transmission = param4.z;
+
+    return m;
+}
+
+// 获取第 i 下标的 BVHNode 对象
+BVHNode getBVHNode(int i) {
+    BVHNode node;
+
+    // 左右子树
+    int offset = i * SIZE_BVHNODE;
+    ivec3 childs = ivec3(texelFetch(nodes, offset + 0).xyz);
+    ivec3 leafInfo = ivec3(texelFetch(nodes, offset + 1).xyz);
+    node.left = int(childs.x);
+    node.right = int(childs.y);
+    node.n = int(leafInfo.x);
+    node.index = int(leafInfo.y);
+
+    // 包围盒
+    node.AA = texelFetch(nodes, offset + 2).xyz;
+    node.BB = texelFetch(nodes, offset + 3).xyz;
+
+    return node;
+}
 
 // ----------------------------------------------------------------------------- //
 
@@ -279,15 +294,16 @@ HitResult hitArray(Ray ray, int l, int r) {
     res.distance = INF;
     for(int i=l; i<=r; i++) {
         Triangle triangle = getTriangle(i);
-        HitResult hitRes = hitTriangle(triangle, ray);
-        if(hitRes.isHit && hitRes.distance<res.distance) {
-            res = hitRes;
+        HitResult r = hitTriangle(triangle, ray);
+        if(r.isHit && r.distance<res.distance) {
+            res = r;
             res.material = getMaterial(i);
         }
     }
     return res;
 }
 
+// 遍历 BVH 求交
 HitResult hitBVH(Ray ray) {
     HitResult res;
     res.isHit = false;
@@ -367,9 +383,8 @@ vec3 pathTracing(HitResult hit, int maxBounce) {
 
         // 未命中
         if(!newHit.isHit) {
-            //vec3 skyColor = sampleHdr(randomRay.direction);
-            //vec3 skyColor = vec3(0, 0, 0); 
-            //Lo += history * skyColor * f_r * cosine_i / pdf;
+            vec3 skyColor = sampleHdr(randomRay.direction);
+            Lo += history * skyColor * f_r * cosine_i / pdf;
             break;
         }
         
@@ -385,37 +400,35 @@ vec3 pathTracing(HitResult hit, int maxBounce) {
     return Lo;
 }
 
-void main()
-{
+// ----------------------------------------------------------------------------- //
+
+void main() {
+
     // 投射光线
     Ray ray;
-    ray.startPoint = cameraPosition;
-    vec3 dir = vec3(pix.xy, -1) - ray.startPoint;
-    ray.direction = normalize(dir);
+    
+    ray.startPoint = eye;
+    vec2 AA = vec2((rand()-0.5)/float(width), (rand()-0.5)/float(height));
+    vec4 dir = cameraRotate * vec4(pix.xy+AA, -1.5, 0.0);
+    ray.direction = normalize(dir.xyz);
 
-    //fragColor = vec4(0.0, 1.0, 0.0, 1.0);
-
-    //primary hit
+    // primary hit
     HitResult firstHit = hitBVH(ray);
     vec3 color;
     
-    if(!firstHit.isHit) 
-    {
+    if(!firstHit.isHit) {
         color = vec3(0);
-    } 
-    else 
-    {
+        color = sampleHdr(ray.direction);
+    } else {
         vec3 Le = firstHit.material.emissive;
-        vec3 Li = pathTracing(firstHit, maxBounce);
+        vec3 Li = pathTracing(firstHit, 2);
         color = Le + Li;
     }  
     
-    //fragColor = vec4(color, 1.0);
-
     // 和上一帧混合
-    vec3 lastColor = texture(lastFrame, pix.xy*0.5+0.5).rgb;
+    vec3 lastColor = texture2D(lastFrame, pix.xy*0.5+0.5).rgb;
     color = mix(lastColor, color, 1.0/float(frameCounter+1));
-    
+
     // 输出
-    fragColor = vec4(color, 1.0);
+    gl_FragData[0] = vec4(color, 1.0);
 }

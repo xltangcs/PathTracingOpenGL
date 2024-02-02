@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Core/Geometry/PlaneGeometry.h"
 #include "Core/Framebuffer.h"
 
 #include "App/Renderer.h"
@@ -8,6 +7,7 @@
 #include "App/Material.h"
 #include "App/Scene.h"
 #include "App/BVH.h"
+#include "App/RenderPass.h"
 
 class PathTracing : public Renderer
 {
@@ -21,15 +21,13 @@ private:
 	GLuint m_TrianglesTexture;
 	GLuint m_BVHNodesTexture;
 
-	PlaneGeometry m_Plane;
-
-	Shader pathTracingShader, saveLastShader, finalShader;
+	GLuint hdrMap;
 
 	Scene m_Scene;
 
 	int m_frameIndex = 0;
 
-	Framebuffer fbo1, fbo2;
 
+	RenderPass pass1, pass2, pass3;
 
 };

@@ -22,7 +22,6 @@
 #include "App/Render/PBR.h"
 #include "App/Render/PathTracing.h"
 #include "App/Render/DeferRender.h"
-//#include "App/Render/EzRT.h"
 
 
 bool setBVH = 1;
@@ -33,8 +32,6 @@ public:
 	MyImGuiLayer()
 		:m_Camera(45.0f, 0.1f, 100.0f)
 	{
-		//auto ezrt = std::make_shared<EzRT>();
-		//m_Renderer.emplace_back(ezrt);
 
 		
 		//auto deferRender = std::make_shared<DeferRender>();

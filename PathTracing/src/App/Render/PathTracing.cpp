@@ -1,15 +1,18 @@
 ﻿#include "PathTracing.h"
 
 #include <string>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include "Core/Geometry/PlaneGeometry.h"
+#include "App/HDRLoader.h"
 
 extern bool setBVH;
 
-GLuint getTextureRGB32F(int width, int height) 
-{
+GLuint getTextureRGB32F(int width, int height) {
 	GLuint tex;
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -18,27 +21,38 @@ GLuint getTextureRGB32F(int width, int height)
 }
 
 PathTracing::PathTracing()
-	:Renderer("Path Tracing"), m_Plane(2.0, 2.0),
-	fbo1(1280, 720), fbo2(1280, 720),
-	pathTracingShader("./assets/shaders/vshader.vert", "./assets/shaders/fshader.frag"),
-	saveLastShader("./assets/shaders/vshader.vert", "./assets/shaders/pass2.frag"),
-	finalShader("./assets/shaders/vshader.vert", "./assets/shaders/pass3.frag")
-
-	//geometryShader("./assets/shaders/vshader.vert", "./assets/shaders/g_buffer_frag.glsl"),
-	//sceneShader("./assets/shaders/vshader.vert", "./assets/shaders/scene_frag.glsl")
+	: Renderer("Path Tracing"),
+	pass1("./assets/shaders/vshader.vert", "./assets/shaders/fshader.frag"),
+	pass2("./assets/shaders/vshader.vert", "./assets/shaders/pass2.frag"),
+	pass3("./assets/shaders/vshader.vert", "./assets/shaders/pass3.frag")
 {
 	std::vector<TriangleEncoded> m_TriangleEncodeds;
 	std::vector<BVHNodeEncoded> m_BVHNodeEncodeds;
 
-	//m_Scene.AddModel("./assets/models/Stanford Bunny.obj");
+	// hdr 全景图
+	HDRLoaderResult hdrRes;
+	bool r = HDRLoader::load("./assets/textures/HDR/sunset.hdr", hdrRes);
+	hdrMap = getTextureRGB32F(hdrRes.width, hdrRes.height);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, hdrRes.width, hdrRes.height, 0, GL_RGB, GL_FLOAT, hdrRes.cols);
+
+
+	int BunnyID = m_Scene.AddModel("./assets/models/Stanford Bunny.obj");
+
+	Material BunnyMat;
+	BunnyMat.baseColor = glm::vec3(0.9f, 0.9f, 0.9f);
+	int BunnyMatId = m_Scene.AddMaterial(BunnyMat);
+	glm::mat4 BunnyTrans = glm::mat4(1.0f);
+	BunnyTrans = glm::translate(BunnyTrans, glm::vec3(0.3f, -1.6f, 0.0f)) * glm::scale(BunnyTrans, glm::vec3(1.5f, 1.5f, 1.5f));
+	ModelInstance Bunny("Bunny", BunnyID, BunnyTrans, BunnyMatId);
+	m_Scene.AddModelInstance(Bunny);
+
 
 	int quadId = m_Scene.AddModel("./assets/models/quad.obj");
 	Material blueColor;
-	blueColor.baseColor = glm::vec3(0.1f, 0.2f, 0.6f);
-	//blueColor.emissive = glm::vec3(0.2f, 0.0f, 0.0f);
+	blueColor.baseColor = glm::vec3(0.725, 0.71, 0.68);
 	int blueMatId = m_Scene.AddMaterial(blueColor);
 	glm::mat4 quadTrans = glm::mat4(1.0f);
-	quadTrans = glm::scale(quadTrans, glm::vec3(0.5f, 0.5f, 0.5f));
+	quadTrans = glm::translate(quadTrans, glm::vec3(0.0f, -1.4f, 0.0f)) * glm::scale(quadTrans, glm::vec3(20.0f, 0.01f, 20.0f));
 	ModelInstance quad("Cube", quadId, quadTrans, blueMatId);
 	m_Scene.AddModelInstance(quad);
 
@@ -49,12 +63,12 @@ PathTracing::PathTracing()
 	whiteColor.emissive = glm::vec3(30.0f, 30.0f, 30.0f);
 	int whiteMatId = m_Scene.AddMaterial(whiteColor);
 	glm::mat4 sphereTrans = glm::mat4(1.0f);
-	sphereTrans = glm::translate(sphereTrans, glm::vec3(0.0f, 0.5f, 0.5f)) * glm::scale(sphereTrans, glm::vec3(0.05f, 0.05f, 0.05f));
+	sphereTrans = glm::translate(sphereTrans, glm::vec3(0.0, 0.9, 0.0)) * glm::scale(sphereTrans, glm::vec3(1, 1, 1));
 	ModelInstance sphere("Sphere", shpereId, sphereTrans, whiteMatId);
 	m_Scene.AddModelInstance(sphere);
 
-
 	m_Scene.ProcessScene(m_TriangleEncodeds);
+
 
 	int nTriangles = m_TriangleEncodeds.size();
 	BVH bvh;
@@ -68,76 +82,50 @@ PathTracing::PathTracing()
 	m_TrianglesTexture = CreatTextureBuffer(nTriangles * sizeof(TriangleEncoded), &m_TriangleEncodeds[0]);
 	m_BVHNodesTexture = CreatTextureBuffer(nBVHNodes * sizeof(BVHNodeEncoded), &m_BVHNodeEncodeds[0]);
 
-	pathTracingShader.use();
-	pathTracingShader.setInt("nTriangles", nTriangles);
-	pathTracingShader.setInt("nNodes", nBVHNodes);
-
 	std::cout << "Triangles : " << nTriangles << std::endl;
 	std::cout << "BVHNodes : " << nBVHNodes << std::endl;
+
+
+	pass1.GetShader().use();
+	pass1.GetShader().setInt("nTriangles", nTriangles);
+	pass1.GetShader().setInt("nNodes", nBVHNodes);
+
+
+	pass1.CreateFrameBuffer(3);
+	pass2.CreateFrameBuffer(1);
+	pass3.CreateFrameBuffer(0);
 
 }
 
 void PathTracing::Render(Camera& camera)
 {
-	//std::cout <<" frame index :" << m_frameIndex++ << std::endl;
-
-	/****************************************************************/
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-
-	fbo1.Bind();
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	pathTracingShader.use();
+	pass1.GetShader().use();
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_BUFFER, m_TrianglesTexture);
-	pathTracingShader.setInt("TrianglesTexture", 0);
+	pass1.GetShader().setInt("triangles", 0);
 
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_BUFFER, m_BVHNodesTexture);
-	pathTracingShader.setInt("BVHNodesTexture", 1);
+	pass1.GetShader().setInt("nodes", 1);
 
 	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_BUFFER, fbo2.GetTextureID());
-	pathTracingShader.setInt("lastFrame", 2);
+	glBindTexture(GL_TEXTURE_BUFFER, pass2.GetColorAttachmentID(0));
+	pass1.GetShader().setInt("lastFrame", 2);
 
-	pathTracingShader.setInt("setBVH", setBVH);
-	pathTracingShader.setInt("frameCounter", m_frameIndex ++);
-	pathTracingShader.setInt("width", m_Width);
-	pathTracingShader.setInt("height", m_Height);
-	pathTracingShader.setVec3("cameraPosition", camera.GetPosition());
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, hdrMap);
+	pass1.GetShader().setInt("hdrMap", 3);
 
-	glBindVertexArray(m_Plane.VAO);
-	glDrawElements(GL_TRIANGLES, m_Plane.indices.size(), GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
+	pass1.GetShader().setInt("frameCounter", m_frameIndex ++);
+	pass1.GetShader().setInt("width", m_Width);
+	pass1.GetShader().setInt("height", m_Height);
+	pass1.GetShader().setVec3("eye", camera.GetPosition());
+	pass1.GetShader().setMat4("cameraRotate", camera.GetInverseView());
 
+	pass1.Draw();
+	pass2.Draw(pass1.GetColorAttachments());
+	pass3.Draw(pass2.GetColorAttachments());
 
-	/****************************************************************/
-
-	fbo2.Bind();
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	saveLastShader.use();
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, fbo1.GetTextureID());
-	saveLastShader.setInt("lastColor", 0);
-
-	glBindVertexArray(m_Plane.VAO);
-	glDrawElements(GL_TRIANGLES, m_Plane.indices.size(), GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
-
-	/****************************************************************/
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	finalShader.use();
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, fbo2.GetTextureID());
-	finalShader.setInt("finalColor", 0);
-
-	glBindVertexArray(m_Plane.VAO);
-	glDrawElements(GL_TRIANGLES, m_Plane.indices.size(), GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
 }
 
 GLuint PathTracing::CreatTextureBuffer(int size, const void* data)

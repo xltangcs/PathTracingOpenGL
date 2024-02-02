@@ -84,6 +84,9 @@ int BVH::buildBVH(std::vector<TriangleEncoded>& triangles, int l, int r)
     return id;
 }
 
+
+
+
 void BVH::flattenBVHTree(BVHNode* node)
 {
     //if (node == nullptr) return;
