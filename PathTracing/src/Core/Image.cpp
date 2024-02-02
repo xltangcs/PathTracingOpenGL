@@ -6,8 +6,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-Image::Image(uint32_t width, uint32_t height, const void* data)
-    : m_Width(width), m_Height(height), m_DataFormat(GL_RGBA)
+Image::Image(uint32_t width, uint32_t height, GLenum type, const void* data)
+    : m_Width(width), m_Height(height), m_DataFormat(type)
 {
     CreatImage();
     if (data)

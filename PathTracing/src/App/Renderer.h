@@ -17,15 +17,15 @@ public:
 
 	virtual void OnResize(unsigned int width, unsigned int height)
 	{
-		if(width != m_width) m_width = width;
-		if(height != m_height) m_height = height;
+		if(width != m_Width) m_Width = width;
+		if(height != m_Height) m_Height = height;
 	}
 
 	virtual void Render(Camera& camera) {};
 	virtual char* GetRendererName() { return m_RendererName; }
 
 protected:
-	unsigned int m_width = 0, m_height = 0;
+	unsigned int m_Width = 1280, m_Height = 720;
 
 	GLuint m_VAO = 0;
 	char* m_RendererName;

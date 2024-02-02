@@ -21,6 +21,7 @@
 #include "App/Render/RayTracing.h"
 #include "App/Render/PBR.h"
 #include "App/Render/PathTracing.h"
+#include "App/Render/DeferRender.h"
 //#include "App/Render/EzRT.h"
 
 
@@ -34,6 +35,10 @@ public:
 	{
 		//auto ezrt = std::make_shared<EzRT>();
 		//m_Renderer.emplace_back(ezrt);
+
+		
+		//auto deferRender = std::make_shared<DeferRender>();
+		//m_Renderer.emplace_back(deferRender);
 
 		auto pathtracing = std::make_shared<PathTracing>();
 		m_Renderer.emplace_back(pathtracing);

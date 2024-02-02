@@ -1,6 +1,7 @@
 #version 330 core
 
 out vec4 fragColor;
+
 in vec3 pix;
 
 uniform int frameCounter;
@@ -13,6 +14,8 @@ uniform int height;
 
 uniform samplerBuffer TrianglesTexture;
 uniform samplerBuffer BVHNodesTexture;
+
+uniform sampler2D lastFrame;
 
 uniform vec3 cameraPosition;
 uniform vec3 cameraRotate;
@@ -390,6 +393,7 @@ void main()
     vec3 dir = vec3(pix.xy, -1) - ray.startPoint;
     ray.direction = normalize(dir);
 
+    //fragColor = vec4(0.0, 1.0, 0.0, 1.0);
 
     //primary hit
     HitResult firstHit = hitBVH(ray);
@@ -406,10 +410,12 @@ void main()
         color = Le + Li;
     }  
     
+    //fragColor = vec4(color, 1.0);
+
+    // 和上一帧混合
+    vec3 lastColor = texture(lastFrame, pix.xy*0.5+0.5).rgb;
+    color = mix(lastColor, color, 1.0/float(frameCounter+1));
+    
+    // 输出
     fragColor = vec4(color, 1.0);
-
-    //if(frameCounter > 100 && frameCounter <= 150) fragColor = vec4(1.0, 0.0, 0.0, 1.0);
-    //else fragColor = vec4(0.0, 0.0, 1.0, 1.0);
-
-
 }

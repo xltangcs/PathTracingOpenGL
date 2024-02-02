@@ -7,7 +7,7 @@
 class Image
 {
 public:
-	Image(uint32_t width, uint32_t height, const void* data = nullptr);
+	Image(uint32_t width, uint32_t height, GLenum type = GL_RGBA, const void* data = nullptr);
 	Image(const std::string& path);
 	~Image();
 
