@@ -21,16 +21,11 @@ public:
     std::vector<GLuint>& GetColorAttachments() { return colorAttachments; }
     Shader& GetShader() { return m_Shader; }
     GLuint& GetFBO() { return FBO; }
-    GLuint& GetTextureID() { return m_TextureID; }
     GLuint& GetColorAttachmentID(int id) { return colorAttachments[id]; } //array bound
-
+    std::vector<GLuint> colorAttachments;
 private:
     unsigned int m_Width = 1280, m_Height = 720;
     Shader m_Shader;
     GLuint vao;
     GLuint FBO = 0;
-    GLuint m_TextureID;
-
-    std::vector<GLuint> colorAttachments;
-
 };

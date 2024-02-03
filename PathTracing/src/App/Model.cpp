@@ -5,6 +5,7 @@
 
 #include <iostream>
 
+const float INF = 0x3f3f3f3f;
 
 Model::Model(const std::string& filename)
 {
@@ -31,6 +32,14 @@ bool Model::LoadFromFile(const std::string& filename)
     {
         size_t index_offset = 0;
 
+        //float maxx = -INF;
+        //float maxy = -INF;
+        //float maxz = -INF;
+        //
+        //float minx = INF;
+        //float miny = INF;
+        //float minz = INF;
+
         for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) //every face 
         {
             std::vector<glm::vec3> position, normal;
@@ -40,6 +49,8 @@ bool Model::LoadFromFile(const std::string& filename)
                 tinyobj::real_t vx = attrib.vertices[3 * idx.vertex_index + 0];
                 tinyobj::real_t vy = attrib.vertices[3 * idx.vertex_index + 1];
                 tinyobj::real_t vz = attrib.vertices[3 * idx.vertex_index + 2];
+                //maxx = std::max(maxx, vx); maxy = std::max(maxx, vy); maxz = std::max(maxx, vz);
+                //minx = std::min(minx, vx); miny = std::min(minx, vy); minz = std::min(minx, vz);
                 position.push_back(glm::vec3(vx, vy, vz));
 
                 if (!attrib.normals.empty())
@@ -74,6 +85,20 @@ bool Model::LoadFromFile(const std::string& filename)
             Triangles.emplace_back(Triangle(position, normal));
             index_offset += shapes[s].mesh.num_face_vertices[f];
         }
+
+        //float lenx = maxx - minx;
+        //float leny = maxy - miny;
+        //float lenz = maxz - minz;
+        //float maxaxis = std::max(lenx, std::max(leny, lenz));
+        //for (auto& t : Triangles) 
+        //{
+        //    for (auto& p : t.position)
+        //    {
+        //        p.x /= maxaxis;
+        //        p.y /= maxaxis;
+        //        p.z /= maxaxis;
+        //    }
+        //}
         //std::cout << "Triangle size is " << Triangles.size() << std::endl;
     }
     std::cout << "Load model " << filename << " successfully!\n";

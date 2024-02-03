@@ -3,16 +3,16 @@
 #include "App/Model.h"
 #include "App/Material.h"
 
-struct Light
-{
-	glm::vec3 position;
-	glm::vec3 emission;
-	glm::vec3 u;
-	glm::vec3 v;
-	float radius;
-	float area;
-	float type;
-};
+//struct Light
+//{
+//	glm::vec3 position;
+//	glm::vec3 emission;
+//	glm::vec3 u;
+//	glm::vec3 v;
+//	float radius;
+//	float area;
+//	float type;
+//};
 
 struct ModelInstance
 {
@@ -40,21 +40,16 @@ public:
 
 	int AddModel(const std::string& filename);
 	int AddMaterial(const Material& material);
-	int AddLight(const Light& light);
+	//int AddLight(const Light& light);
 	int AddModelInstance(const ModelInstance& instances);
 
 	void ProcessScene(std::vector<TriangleEncoded>& triangleEncodeds);
-
-	const int GetTriangleNum() const { return m_TriangleEncodeds.size(); }
-	const void* GetTriangleAddr() const { return &m_TriangleEncodeds[0]; }
-	std::vector<Triangle>& GetTriangles() { return m_Triangles; }
 private:
 
 	std::vector<Model*> m_Models;
 	std::vector<Material> m_Materials;
-	std::vector<Light> m_Lights;
+	//std::vector<Light> m_Lights;
 	std::vector<ModelInstance> m_Instances;
 
-	std::vector<TriangleEncoded> m_TriangleEncodeds;
 	std::vector<Triangle> m_Triangles;
 };

@@ -35,35 +35,34 @@ PathTracing::PathTracing()
 	hdrMap = getTextureRGB32F(hdrRes.width, hdrRes.height);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, hdrRes.width, hdrRes.height, 0, GL_RGB, GL_FLOAT, hdrRes.cols);
 
-
+	
 	int BunnyID = m_Scene.AddModel("./assets/models/Stanford Bunny.obj");
-
 	Material BunnyMat;
-	BunnyMat.baseColor = glm::vec3(0.9f, 0.9f, 0.9f);
+	BunnyMat.baseColor = glm::vec3(1, 0, 0);
 	int BunnyMatId = m_Scene.AddMaterial(BunnyMat);
 	glm::mat4 BunnyTrans = glm::mat4(1.0f);
-	BunnyTrans = glm::translate(BunnyTrans, glm::vec3(0.3f, -1.6f, 0.0f)) * glm::scale(BunnyTrans, glm::vec3(1.5f, 1.5f, 1.5f));
+	BunnyTrans = glm::translate(BunnyTrans, glm::vec3(0.0f, -0.1f, 0.0f)) * glm::scale(BunnyTrans, glm::vec3(4.0f, 4.0f, 4.0f));
 	ModelInstance Bunny("Bunny", BunnyID, BunnyTrans, BunnyMatId);
 	m_Scene.AddModelInstance(Bunny);
-
-
+	
+	
 	int quadId = m_Scene.AddModel("./assets/models/quad.obj");
 	Material blueColor;
 	blueColor.baseColor = glm::vec3(0.725, 0.71, 0.68);
 	int blueMatId = m_Scene.AddMaterial(blueColor);
 	glm::mat4 quadTrans = glm::mat4(1.0f);
-	quadTrans = glm::translate(quadTrans, glm::vec3(0.0f, -1.4f, 0.0f)) * glm::scale(quadTrans, glm::vec3(20.0f, 0.01f, 20.0f));
+	quadTrans = glm::translate(quadTrans, glm::vec3(0.0f, -2.0f, 0.0f)) * glm::scale(quadTrans, glm::vec3(20.0f, 0.01f, 20.0f));
 	ModelInstance quad("Cube", quadId, quadTrans, blueMatId);
 	m_Scene.AddModelInstance(quad);
 
 
 	int shpereId = m_Scene.AddModel("./assets/models/sphere.obj");
 	Material whiteColor;
-	whiteColor.baseColor = glm::vec3(0.9f, 0.9f, 0.9f);
-	whiteColor.emissive = glm::vec3(30.0f, 30.0f, 30.0f);
+	whiteColor.baseColor = glm::vec3(1, 1, 1);
+	whiteColor.emissive = glm::vec3(30, 20, 10);
 	int whiteMatId = m_Scene.AddMaterial(whiteColor);
 	glm::mat4 sphereTrans = glm::mat4(1.0f);
-	sphereTrans = glm::translate(sphereTrans, glm::vec3(0.0, 0.9, 0.0)) * glm::scale(sphereTrans, glm::vec3(1, 1, 1));
+	sphereTrans = glm::translate(sphereTrans, glm::vec3(0.0, 0.9, 0.0)) * glm::scale(sphereTrans, glm::vec3(0.1, 0.1, 0.1));
 	ModelInstance sphere("Sphere", shpereId, sphereTrans, whiteMatId);
 	m_Scene.AddModelInstance(sphere);
 
@@ -72,7 +71,8 @@ PathTracing::PathTracing()
 
 	int nTriangles = m_TriangleEncodeds.size();
 	BVH bvh;
-	bvh.buildBVH(m_TriangleEncodeds, 0, nTriangles - 1);
+	//bvh.buildBVH(m_TriangleEncodeds, 0, nTriangles - 1);
+	bvh.buildBVHwithSAH(m_TriangleEncodeds, 0, nTriangles - 1);
 
 	bvh.translateBVHNodes(m_BVHNodeEncodeds);
 	int nBVHNodes = m_BVHNodeEncodeds.size();
@@ -91,10 +91,14 @@ PathTracing::PathTracing()
 	pass1.GetShader().setInt("nNodes", nBVHNodes);
 
 
-	pass1.CreateFrameBuffer(3);
-	pass2.CreateFrameBuffer(1);
-	pass3.CreateFrameBuffer(0);
+	pass1.colorAttachments.push_back(getTextureRGB32F(1280,720));
+	pass1.CreateFrameBuffer(1);
 
+	lastFrame = getTextureRGB32F(1280, 720);
+	pass2.colorAttachments.push_back(lastFrame);
+	pass2.CreateFrameBuffer(1);
+
+	pass3.CreateFrameBuffer(0);
 }
 
 void PathTracing::Render(Camera& camera)
@@ -109,7 +113,7 @@ void PathTracing::Render(Camera& camera)
 	pass1.GetShader().setInt("nodes", 1);
 
 	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_BUFFER, pass2.GetColorAttachmentID(0));
+	glBindTexture(GL_TEXTURE_BUFFER, pass2.colorAttachments[0]);
 	pass1.GetShader().setInt("lastFrame", 2);
 
 	glActiveTexture(GL_TEXTURE3);
@@ -122,9 +126,13 @@ void PathTracing::Render(Camera& camera)
 	pass1.GetShader().setVec3("eye", camera.GetPosition());
 	pass1.GetShader().setMat4("cameraRotate", camera.GetInverseView());
 
+	//pass1.Draw();
+	//pass2.Draw(pass1.GetColorAttachments());
+	//pass3.Draw(pass2.GetColorAttachments());
+
 	pass1.Draw();
-	pass2.Draw(pass1.GetColorAttachments());
-	pass3.Draw(pass2.GetColorAttachments());
+	pass2.Draw(pass1.colorAttachments);
+	pass3.Draw(pass2.colorAttachments);
 
 }
 

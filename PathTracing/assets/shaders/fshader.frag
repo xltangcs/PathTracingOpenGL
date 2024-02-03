@@ -114,6 +114,18 @@ vec3 SampleHemisphere() {
     return vec3(r * cos(phi), r * sin(phi), z);
 }
 
+/*
+vec3 toNormalHemisphere(vec3 v, vec3 N) {
+    vec3 tangent = vec3(0);
+    if(N.yz==vec2(0)) tangent = vec3(0, 0, -N.x);
+    else if(N.xz==vec2(0)) tangent = vec3(0, 0, N.y);
+    else if(N.xy==vec2(0)) tangent = vec3(-N.z, 0, 0);
+    else if(abs(N.x)>abs(N.y)) tangent = normalize(vec3(0, N.z, -N.y));
+    else tangent = normalize(vec3(-N.z, 0, N.x)); 
+    vec3 bitangent = cross(N, tangent);
+    return normalize(v.x * tangent + v.y * bitangent + v.z * N);
+}
+*/
 
 // 将向量 v 投影到 N 的法向半球
 vec3 toNormalHemisphere(vec3 v, vec3 N) {
@@ -426,9 +438,10 @@ void main() {
     }  
     
     // 和上一帧混合
-    vec3 lastColor = texture2D(lastFrame, pix.xy*0.5+0.5).rgb;
-    color = mix(lastColor, color, 1.0/float(frameCounter+1));
-
+    vec3 lastColor = texture(lastFrame, pix.xy*0.5+0.5).rgb;
+    
+    //color = mix(lastColor, color, 1.0/float(frameCounter+1));
+    color = mix(lastColor, color, 0.8);
     // 输出
     gl_FragData[0] = vec4(color, 1.0);
 }

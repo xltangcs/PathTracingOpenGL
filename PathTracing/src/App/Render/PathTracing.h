@@ -20,6 +20,7 @@ public:
 private:
 	GLuint m_TrianglesTexture;
 	GLuint m_BVHNodesTexture;
+	GLuint lastFrame;
 
 	GLuint hdrMap;
 

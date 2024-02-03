@@ -5,8 +5,6 @@
 #include <algorithm>
 #include <iostream>
 
-const float INF = 0x3f3f3f3f;
-
 int Scene::AddModel(const std::string& filename)
 {
     int id = -1;
@@ -45,12 +43,12 @@ int Scene::AddMaterial(const Material& material)
     return id;
 }
 
-int Scene::AddLight(const Light& light)
-{
-    int id = m_Lights.size();
-    m_Lights.push_back(light);
-    return id;
-}
+//int Scene::AddLight(const Light& light)
+//{
+//    int id = m_Lights.size();
+//    m_Lights.push_back(light);
+//    return id;
+//}
 
 int Scene::AddModelInstance(const ModelInstance& instances)
 {

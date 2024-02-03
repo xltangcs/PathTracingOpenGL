@@ -17,7 +17,7 @@ vec3 toneMapping(in vec3 c, float limit) {
 }
 
 void main() {
-    vec3 color = texture(texPass0, pix.xy*0.5+0.5).rgb;
+    vec3 color = texture2D(texPass0, pix.xy*0.5+0.5).rgb;
     color = toneMapping(color, 1.5);
     color = pow(color, vec3(1.0 / 2.2));
 
