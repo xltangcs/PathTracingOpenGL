@@ -25,10 +25,7 @@ private:
 	GLuint hdrMap;
 
 	Scene m_Scene;
-
 	int m_frameIndex = 0;
 
-
 	RenderPass pass1, pass2, pass3;
-
 };

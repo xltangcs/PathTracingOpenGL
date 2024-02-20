@@ -94,8 +94,7 @@ PathTracing::PathTracing()
 	pass1.colorAttachments.push_back(getTextureRGB32F(1280,720));
 	pass1.CreateFrameBuffer(1);
 
-	lastFrame = getTextureRGB32F(1280, 720);
-	pass2.colorAttachments.push_back(lastFrame);
+	pass2.colorAttachments.push_back(getTextureRGB32F(1280, 720));
 	pass2.CreateFrameBuffer(1);
 
 	pass3.CreateFrameBuffer(0);
@@ -113,7 +112,7 @@ void PathTracing::Render(Camera& camera)
 	pass1.GetShader().setInt("nodes", 1);
 
 	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_BUFFER, pass2.colorAttachments[0]);
+	glBindTexture(GL_TEXTURE_2D, pass2.colorAttachments[0]);
 	pass1.GetShader().setInt("lastFrame", 2);
 
 	glActiveTexture(GL_TEXTURE3);
@@ -125,10 +124,6 @@ void PathTracing::Render(Camera& camera)
 	pass1.GetShader().setInt("height", m_Height);
 	pass1.GetShader().setVec3("eye", camera.GetPosition());
 	pass1.GetShader().setMat4("cameraRotate", camera.GetInverseView());
-
-	//pass1.Draw();
-	//pass2.Draw(pass1.GetColorAttachments());
-	//pass3.Draw(pass2.GetColorAttachments());
 
 	pass1.Draw();
 	pass2.Draw(pass1.colorAttachments);

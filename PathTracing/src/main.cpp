@@ -15,13 +15,7 @@
 #include "Core/Application.h"
 #include "Core/Image.h"
 #include "App/Camera.h"
-#include "App/Renderer.h"
-#include "App/Render/FirstRenderer.h"
-#include "App/Render/ContainerRenderer.h"
-#include "App/Render/RayTracing.h"
-#include "App/Render/PBR.h"
-#include "App/Render/PathTracing.h"
-#include "App/Render/DeferRender.h"
+#include "App/PathTracing.h"
 
 
 bool setBVH = 1;
@@ -32,21 +26,8 @@ public:
 	MyImGuiLayer()
 		:m_Camera(45.0f, 0.1f, 100.0f)
 	{
-
-		
-		//auto deferRender = std::make_shared<DeferRender>();
-		//m_Renderer.emplace_back(deferRender);
-
 		auto pathtracing = std::make_shared<PathTracing>();
 		m_Renderer.emplace_back(pathtracing);
-		auto pbr = std::make_shared<PBR>();
-		m_Renderer.emplace_back(pbr);
-		auto ray = std::make_shared<RayTracing>();
-		m_Renderer.emplace_back(ray);
-		auto first = std::make_shared<FirstRenderer>();
-		m_Renderer.emplace_back(first);
-		auto container = std::make_shared<ContainerRenderer>();
-		m_Renderer.emplace_back(container);
 
 		for (auto render : m_Renderer)
 			m_RendererName.emplace_back(render->GetRendererName());

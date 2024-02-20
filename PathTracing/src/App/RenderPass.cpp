@@ -3,18 +3,35 @@
 RenderPass::RenderPass(const char* vertexPath, const char* fragmentPath)
     : m_Shader(vertexPath, fragmentPath)
 {
+    //GLuint vbo;
+    //glGenBuffers(1, &vbo);
+    //glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    //std::vector<glm::vec3> square = {
+    //    glm::vec3(-1, -1, 0),
+    //    glm::vec3(1, -1, 0),
+    //    glm::vec3(-1,  1, 0),
+    //    glm::vec3(1,  1, 0),
+    //    glm::vec3(-1,  1, 0),
+    //    glm::vec3(1, -1, 0)
+    //};
+
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * square.size(), NULL, GL_STATIC_DRAW);
+    //glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec3) * square.size(), &square[0]);
+
+    //glGenVertexArrays(1, &vao);
+    //glBindVertexArray(vao);
+    //glEnableVertexAttribArray(0);   // layout (location = 0) 
+    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+}
+
+void RenderPass::CreateFrameBuffer(int attachmentNum) {
+    if (attachmentNum) glGenFramebuffers(1, &FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
     GLuint vbo;
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    std::vector<glm::vec3> square = {
-        glm::vec3(-1, -1, 0),
-        glm::vec3(1, -1, 0),
-        glm::vec3(-1,  1, 0),
-        glm::vec3(1,  1, 0),
-        glm::vec3(-1,  1, 0),
-        glm::vec3(1, -1, 0)
-    };
-
+    std::vector<glm::vec3> square = { glm::vec3(-1, -1, 0), glm::vec3(1, -1, 0), glm::vec3(-1, 1, 0), glm::vec3(1, 1, 0), glm::vec3(-1, 1, 0), glm::vec3(1, -1, 0) };
     glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * square.size(), NULL, GL_STATIC_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec3) * square.size(), &square[0]);
 
@@ -22,11 +39,7 @@ RenderPass::RenderPass(const char* vertexPath, const char* fragmentPath)
     glBindVertexArray(vao);
     glEnableVertexAttribArray(0);   // layout (location = 0) 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
-}
 
-void RenderPass::CreateFrameBuffer(int attachmentNum) {
-    if (attachmentNum) glGenFramebuffers(1, &FBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
     // 不是 finalPass 则生成帧缓冲的颜色附件
     if (attachmentNum) {
@@ -116,7 +129,3 @@ void RenderPass::Draw(std::vector<GLuint> texPassArray)
     glUseProgram(0);
 }
 
-void RenderPass::AddColorAttachment(GLuint tattachment)
-{
-    colorAttachments.push_back(tattachment);
-}
