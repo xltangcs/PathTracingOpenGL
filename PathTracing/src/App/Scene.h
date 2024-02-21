@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "App/Model.h"
 #include "App/Material.h"
 
@@ -35,7 +37,10 @@ struct ModelInstance
 class Scene
 {
 public:
-	Scene() = default;
+	char* sceneName;
+	std::vector<TriangleEncoded> m_TriangleEncoded;
+public:
+	Scene(char* name = "Scene") : sceneName(name) {};
 	~Scene() = default;
 
 	int AddModel(const std::string& filename);
@@ -43,13 +48,10 @@ public:
 	//int AddLight(const Light& light);
 	int AddModelInstance(const ModelInstance& instances);
 
-	void ProcessScene(std::vector<TriangleEncoded>& triangleEncodeds);
+	void ProcessScene();
 private:
-
 	std::vector<Model*> m_Models;
 	std::vector<Material> m_Materials;
 	//std::vector<Light> m_Lights;
 	std::vector<ModelInstance> m_Instances;
-
-	std::vector<Triangle> m_Triangles;
 };

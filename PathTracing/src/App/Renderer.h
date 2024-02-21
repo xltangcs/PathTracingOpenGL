@@ -8,14 +8,15 @@
 #include "Core/Image.h"
 #include "Core/Shader.h"
 
-#include <App/Camera.h>
+#include "App/Scene.h"
+#include "App/Camera.h""
 
 class Renderer {
 public:
 	Renderer(char* name = "Renderer") : m_RendererName(name) {};
 	virtual ~Renderer() = default;
 
-	virtual void Render(Camera& camera) {};
+	virtual void Render(Camera& camera, Scene& scene) {};
 	virtual void OnResize(unsigned int width, unsigned int height) {};
 
 	virtual char* GetRendererName() { return m_RendererName; }

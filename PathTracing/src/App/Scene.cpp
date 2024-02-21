@@ -1,9 +1,7 @@
 #include "Scene.h"
 
-#include <glm/gtc/matrix_transform.hpp>>
-
-#include <algorithm>
-#include <iostream>
+//#include <algorithm>
+//#include <iostream>
 
 int Scene::AddModel(const std::string& filename)
 {
@@ -20,12 +18,6 @@ int Scene::AddModel(const std::string& filename)
     if (model->LoadFromFile(filename))
     {
         m_Models.push_back(model);
-
-        for (size_t i = 0; i < model->Triangles.size(); i++)
-        {
-            auto& t = model->Triangles[i];
-            m_Triangles.push_back(t);
-        }
     }
     else
     {
@@ -57,7 +49,7 @@ int Scene::AddModelInstance(const ModelInstance& instances)
     return 0;
 }
 
-void Scene::ProcessScene(std::vector<TriangleEncoded>& triangleEncodeds)
+void Scene::ProcessScene()
 {
     printf("Processing Scene ...\n");
     for (auto instance : m_Instances)
@@ -86,7 +78,7 @@ void Scene::ProcessScene(std::vector<TriangleEncoded>& triangleEncodeds)
             te.param3 = glm::vec3(m.sheen, m.sheenTint, m.clearcoat);
             te.param4 = glm::vec3(m.clearcoatGloss, m.IOR, m.transmission);
 
-            triangleEncodeds.push_back(te);
+            m_TriangleEncoded.push_back(te);
         }
     } 
 }
