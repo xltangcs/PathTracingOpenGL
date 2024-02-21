@@ -20,6 +20,8 @@ uniform sampler2D hdrMap;
 uniform vec3 eye;
 uniform mat4 cameraRotate;
 
+uniform bool cameraMoved;
+
 // ----------------------------------------------------------------------------- //
 
 #define PI              3.1415926
@@ -437,11 +439,12 @@ void main() {
         color = Le + Li;
     }  
     
-    // 和上一帧混合
-    vec3 lastColor = texture(lastFrame, pix.xy*0.5+0.5).rgb;
-    
-    color = mix(lastColor, color, 1.0/float(frameCounter+1));
-
+    if(!cameraMoved)
+    {
+        // 和上一帧混合
+        vec3 lastColor = texture(lastFrame, pix.xy*0.5+0.5).rgb;
+        color = mix(lastColor, color, 1.0/float(frameCounter+1));
+    }
     // 输出
     gl_FragData[0] = vec4(color, 1.0);
 }

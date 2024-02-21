@@ -16,6 +16,7 @@ public:
     void CreateFrameBuffer(int attachmentNum);
     void Draw(std::vector<GLuint> texPassArray = {});
 
+    void OnResize(unsigned int width, unsigned int height);
 
     std::vector<GLuint>& GetColorAttachments() { return colorAttachments; }
     Shader& GetShader() { return m_Shader; }
@@ -25,7 +26,8 @@ public:
     std::vector<GLuint> colorAttachments;
 private:
     unsigned int m_Width = 1280, m_Height = 720;
+    bool isColorAttachments = false;
     Shader m_Shader;
-    GLuint vao;
+    GLuint vao = 0;
     GLuint FBO = 0;
 };

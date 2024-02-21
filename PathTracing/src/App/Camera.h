@@ -7,6 +7,8 @@
 class Camera
 {
 public:
+	bool isCameraMoved = false;
+public:
 	Camera(float verticalFOV = 45.0f, float nearClip = 0.1f, float farClip = 100.0f, bool isrotation = false);
 
 	void OnUpdate(float ts);
@@ -26,6 +28,7 @@ public:
 	int& GetHeight() { return m_ViewportHeight; }
 
 	float GetRotationSpeed();
+
 private:
 	void RecalculateProjection();
 	void RecalculateView();
@@ -46,5 +49,4 @@ private:
 	glm::vec2 m_LastMousePosition{ 0.0f, 0.0f };
 
 	int m_ViewportWidth = 0, m_ViewportHeight = 0;
-
 };

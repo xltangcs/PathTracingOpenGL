@@ -15,13 +15,9 @@ public:
 	Renderer(char* name = "Renderer") : m_RendererName(name) {};
 	virtual ~Renderer() = default;
 
-	virtual void OnResize(unsigned int width, unsigned int height)
-	{
-		if(width != m_Width) m_Width = width;
-		if(height != m_Height) m_Height = height;
-	}
-
 	virtual void Render(Camera& camera) {};
+	virtual void OnResize(unsigned int width, unsigned int height) {};
+
 	virtual char* GetRendererName() { return m_RendererName; }
 
 protected:

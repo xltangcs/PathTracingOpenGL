@@ -34,7 +34,7 @@ void Camera::OnUpdate(float ts)
 	glfwGetFramebufferSize(window, &width, &height);
 	OnResize(width, height);
 
-	static bool isFirst = true;
+	this->isCameraMoved = false;
 
 	auto IsKeyDown = [&window](int key) ->bool {
 		return glfwGetKey(window, key) == GLFW_PRESS || glfwGetKey(window, key) == GLFW_REPEAT;
@@ -48,18 +48,16 @@ void Camera::OnUpdate(float ts)
 	glm::vec2 delta = (mousePos - m_LastMousePosition) * 0.002f;
 	m_LastMousePosition = mousePos;
 
+	static bool isFirst = true;
 	// mouse right PRESS status into editing mode
 	if (!isFirst && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) != GLFW_PRESS)
 	{
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 		return;
 	}
-
 	isFirst = false;
 
-
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
-	bool moved = false;
 
 	constexpr glm::vec3 upDirection(0.0f, 1.0f, 0.0f);
 	glm::vec3 rightDirection = glm::cross(m_ForwardDirection, upDirection);
@@ -70,33 +68,33 @@ void Camera::OnUpdate(float ts)
 	if (IsKeyDown(GLFW_KEY_W))
 	{
 		m_Position += m_ForwardDirection * speed * ts;
-		moved = true;
+		isCameraMoved = true;
 	}
 	else if (IsKeyDown(GLFW_KEY_S))
 	{
 		m_Position -= m_ForwardDirection * speed * ts;
-		moved = true;
+		isCameraMoved = true;
 	}
 	if (IsKeyDown(GLFW_KEY_A))
 	{
 		m_Position -= rightDirection * speed * ts;
-		moved = true;
+		isCameraMoved = true;
 	}
 	else if (IsKeyDown(GLFW_KEY_D))
 	{
 		m_Position += rightDirection * speed * ts;
-		moved = true;
+		isCameraMoved = true;
 	}
 
 	if (IsKeyDown(GLFW_KEY_Q))
 	{
 		m_Position -= upDirection * speed * ts;
-		moved = true;
+		isCameraMoved = true;
 	}
 	else if (IsKeyDown(GLFW_KEY_E))
 	{
 		m_Position += upDirection * speed * ts;
-		moved = true;
+		isCameraMoved = true;
 	}
 
 	if (isRotation)
@@ -111,20 +109,20 @@ void Camera::OnUpdate(float ts)
 				glm::angleAxis(-yawDelta, glm::vec3(0.f, 1.0f, 0.0f))));
 			m_ForwardDirection = glm::rotate(q, m_ForwardDirection);
 
-			moved = true;
+			isCameraMoved = true;
 		}
 	}
 	if (m_Yoffset)
 	{
+		isCameraMoved = true;
 		ProcessMouseScroll();
 	}
 	
 
-	if (moved)
+	if (isCameraMoved)
 	{
 		RecalculateView();
 	}
-
 }
 
 void Camera::OnResize(int width, int height)

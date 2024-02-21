@@ -13,19 +13,25 @@ class PathTracing : public Renderer
 {
 public:
 	PathTracing();
+
 	virtual void Render(Camera& camera) override;
+	virtual void OnResize(unsigned int width, unsigned int height) override;
 
 	GLuint CreatTextureBuffer(int size, const void* data);
+	void ProcessData();
+	void CreateFrameBuffer();
+
 
 private:
 	GLuint m_TrianglesTexture;
 	GLuint m_BVHNodesTexture;
-	GLuint lastFrame;
-
 	GLuint hdrMap;
 
-	Scene m_Scene;
-	int m_frameIndex = 0;
+	std::vector<TriangleEncoded> m_TriangleEncodeds;
+	std::vector<BVHNodeEncoded> m_BVHNodeEncodeds;
 
+	int m_frameIndex = 0;
 	RenderPass pass1, pass2, pass3;
+	
+	Scene m_Scene;
 };

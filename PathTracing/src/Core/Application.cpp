@@ -165,12 +165,13 @@ void Application::Run()
         for (auto& imguilayer : m_ImGuiLayerVector)
         {
             imguilayer->ShowUI(m_TimeStep);
-        }
-
-        for (auto& imguilayer : m_ImGuiLayerVector)
-        {
             imguilayer->Render(m_TimeStep);
         }
+
+ /*     for (auto& imguilayer : m_ImGuiLayerVector)
+        {
+            imguilayer->Render(m_TimeStep);
+        }*/
         int display_w, display_h;
         glfwGetFramebufferSize(m_GLFWwindow, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
