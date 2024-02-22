@@ -19,6 +19,7 @@
 
 #include "App/Scene/BaseScene.h"
 #include "App/Scene/CornellBoxScene.h"
+#include "App/Scene/BRDF_Test_Scene.h"
 
 class MyImGuiLayer : public ImGuiLayer
 {
@@ -27,6 +28,9 @@ public:
 		:m_Camera(45.0f, 0.1f, 100.0f)
 	{
 		m_Renderer = std::make_shared<PathTracing>();
+
+		m_SceneNames.push_back("BRDF Test Scene");
+		createScenePtrs.push_back(BRDF_Test_Scene);
 
 		m_SceneNames.push_back("Cornell Box Scene");
 		createScenePtrs.push_back(CornellBoxScene);
@@ -43,6 +47,8 @@ public:
 		//glfwGetWindowSize(window, &width, &height);
 		glfwGetFramebufferSize(window, &width, &height);
 		m_Width = width; m_Height = height;
+
+		glViewport(0, 0, m_Width, m_Height);
 
 		m_Camera.OnUpdate(ts);
 		m_Renderer->OnResize(m_Width, m_Height);

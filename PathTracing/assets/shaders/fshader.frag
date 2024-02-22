@@ -24,31 +24,34 @@ uniform bool Reset;
 
 // ----------------------------------------------------------------------------- //
 
-#define PI              3.1415926
-#define INF             114514.0
+#define INF             0x3f3f3f3f
 #define SIZE_TRIANGLE   12
 #define SIZE_BVHNODE    4
 
+const float PI = 3.14159265358979323846;
+
+float sqr(float x) { return x*x; }
+
 // ----------------------------------------------------------------------------- //
 
-// Triangle Êı¾İ¸ñÊ½
+// Triangle æ•°æ®æ ¼å¼
 struct Triangle {
-    vec3 p1, p2, p3;    // ¶¥µã×ø±ê
-    vec3 n1, n2, n3;    // ¶¥µã·¨Ïß
+    vec3 p1, p2, p3;    // é¡¶ç‚¹åæ ‡
+    vec3 n1, n2, n3;    // é¡¶ç‚¹æ³•çº¿
 };
 
-// BVH Ê÷½Úµã
+// BVH æ ‘èŠ‚ç‚¹
 struct BVHNode {
-    int left;           // ×ó×ÓÊ÷
-    int right;          // ÓÒ×ÓÊ÷
-    int n;              // °üº¬Èı½ÇĞÎÊıÄ¿
-    int index;          // Èı½ÇĞÎË÷Òı
-    vec3 AA, BB;        // Åö×²ºĞ
+    int left;           // å·¦å­æ ‘
+    int right;          // å³å­æ ‘
+    int n;              // åŒ…å«ä¸‰è§’å½¢æ•°ç›®
+    int index;          // ä¸‰è§’å½¢ç´¢å¼•
+    vec3 AA, BB;        // ç¢°æ’ç›’
 };
 
-// ÎïÌå±íÃæ²ÄÖÊ¶¨Òå
+// ç‰©ä½“è¡¨é¢æè´¨å®šä¹‰
 struct Material {
-    vec3 emissive;          // ×÷Îª¹âÔ´Ê±µÄ·¢¹âÑÕÉ«
+    vec3 emissive;          // ä½œä¸ºå…‰æºæ—¶çš„å‘å…‰é¢œè‰²
     vec3 baseColor;
     float subsurface;
     float metallic;
@@ -64,28 +67,28 @@ struct Material {
     float transmission;
 };
 
-// ¹âÏß
+// å…‰çº¿
 struct Ray {
     vec3 startPoint;
     vec3 direction;
 };
 
-// ¹âÏßÇó½»½á¹û
+// å…‰çº¿æ±‚äº¤ç»“æœ
 struct HitResult {
-    bool isHit;             // ÊÇ·ñÃüÖĞ
-    bool isInside;          // ÊÇ·ñ´ÓÄÚ²¿ÃüÖĞ
-    float distance;         // Óë½»µãµÄ¾àÀë
-    vec3 hitPoint;          // ¹âÏßÃüÖĞµã
-    vec3 normal;            // ÃüÖĞµã·¨Ïß
-    vec3 viewDir;           // »÷ÖĞ¸ÃµãµÄ¹âÏßµÄ·½Ïò
-    Material material;      // ÃüÖĞµãµÄ±íÃæ²ÄÖÊ
+    bool isHit;             // æ˜¯å¦å‘½ä¸­
+    bool isInside;          // æ˜¯å¦ä»å†…éƒ¨å‘½ä¸­
+    float distance;         // ä¸äº¤ç‚¹çš„è·ç¦»
+    vec3 hitPoint;          // å…‰çº¿å‘½ä¸­ç‚¹
+    vec3 normal;            // å‘½ä¸­ç‚¹æ³•çº¿
+    vec3 viewDir;           // å‡»ä¸­è¯¥ç‚¹çš„å…‰çº¿çš„æ–¹å‘
+    Material material;      // å‘½ä¸­ç‚¹çš„è¡¨é¢æè´¨
 };
 
 // ----------------------------------------------------------------------------- //
 
 /*
- * Éú³ÉËæ»úÏòÁ¿£¬ÒÀÀµÓÚ frameCounter Ö¡¼ÆÊıÆ÷
- * ´úÂëÀ´Ô´£ºhttps://blog.demofox.org/2020/05/25/casual-shadertoy-path-tracing-1-basic-camera-diffuse-emissive/
+ * ç”Ÿæˆéšæœºå‘é‡ï¼Œä¾èµ–äº frameCounter å¸§è®¡æ•°å™¨
+ * ä»£ç æ¥æºï¼šhttps://blog.demofox.org/2020/05/25/casual-shadertoy-path-tracing-1-basic-camera-diffuse-emissive/
 */
 
 uint seed = uint(
@@ -108,39 +111,44 @@ float rand() {
 
 // ----------------------------------------------------------------------------- //
 
-// °ëÇò¾ùÔÈ²ÉÑù
-vec3 SampleHemisphere() {
-    float z = rand();
-    float r = max(0, sqrt(1.0 - z*z));
-    float phi = 2.0 * PI * rand();
-    return vec3(r * cos(phi), r * sin(phi), z);
+// åŠçƒå‡åŒ€é‡‡æ ·
+//vec3 SampleHemisphere() {
+//    float z = rand();
+//    float r = max(0, sqrt(1.0 - z*z));
+//    float phi = 2.0 * PI * rand();
+//    return vec3(r * cos(phi), r * sin(phi), z);
+//}
+
+vec3 SampleHemisphere() 
+{
+    float r1 = rand();
+    float r2 = rand();
+    float x = cos(2.0*PI*r1)*2.0*sqrt(r2*(1.0-r2));
+    float y = sin(2.0*PI*r1)*2.0*sqrt(r2*(1.0-r2));
+    float z = 1.0 - 2.0 * r2;
+    return vec3(x, y, z);
 }
 
-/*
-vec3 toNormalHemisphere(vec3 v, vec3 N) {
-    vec3 tangent = vec3(0);
-    if(N.yz==vec2(0)) tangent = vec3(0, 0, -N.x);
-    else if(N.xz==vec2(0)) tangent = vec3(0, 0, N.y);
-    else if(N.xy==vec2(0)) tangent = vec3(-N.z, 0, 0);
-    else if(abs(N.x)>abs(N.y)) tangent = normalize(vec3(0, N.z, -N.y));
-    else tangent = normalize(vec3(-N.z, 0, N.x)); 
-    vec3 bitangent = cross(N, tangent);
-    return normalize(v.x * tangent + v.y * bitangent + v.z * N);
-}
-*/
-
-// ½«ÏòÁ¿ v Í¶Ó°µ½ N µÄ·¨Ïò°ëÇò
+// å°†å‘é‡ v æŠ•å½±åˆ° N çš„æ³•å‘åŠçƒ
 vec3 toNormalHemisphere(vec3 v, vec3 N) {
     vec3 helper = vec3(1, 0, 0);
-    if(abs(N.x)>0.999) helper = vec3(0, 0, 1);
+    if(abs(N.x)>0.999) helper = vec3(0, 1, 0);
     vec3 tangent = normalize(cross(N, helper));
     vec3 bitangent = normalize(cross(N, tangent));
     return v.x * tangent + v.y * bitangent + v.z * N;
 }
 
+
+void getTangent(vec3 N, inout vec3 tangent, inout vec3 bitangent) {
+    vec3 helper = vec3(1, 0, 0);
+    if(abs(N.x)>0.999) helper = vec3(0, 0, 1);
+    bitangent = normalize(cross(N, helper));
+    tangent = normalize(cross(N, bitangent));
+}
+
 // ----------------------------------------------------------------------------- //
 
-// ½«ÈıÎ¬ÏòÁ¿ v ×ªÎª HDR map µÄÎÆÀí×ø±ê uv
+// å°†ä¸‰ç»´å‘é‡ v è½¬ä¸º HDR map çš„çº¹ç†åæ ‡ uv
 vec2 SampleSphericalMap(vec3 v) {
     vec2 uv = vec2(atan(v.z, v.x), asin(v.y));
     uv /= vec2(2.0 * PI, PI);
@@ -149,26 +157,26 @@ vec2 SampleSphericalMap(vec3 v) {
     return uv;
 }
 
-// »ñÈ¡ HDR »·¾³ÑÕÉ«
+// è·å– HDR ç¯å¢ƒé¢œè‰²
 vec3 sampleHdr(vec3 v) {
     vec2 uv = SampleSphericalMap(normalize(v));
-    vec3 color = texture2D(hdrMap, uv).rgb;
-    color = min(color, vec3(10));
+    vec3 color = vec3(0.0);
+    color = min(texture2D(hdrMap, uv).rgb, vec3(10));
     return color;
 }
 
 // ----------------------------------------------------------------------------- //
 
-// »ñÈ¡µÚ i ÏÂ±êµÄÈı½ÇĞÎ
+// è·å–ç¬¬ i ä¸‹æ ‡çš„ä¸‰è§’å½¢
 Triangle getTriangle(int i) {
     int offset = i * SIZE_TRIANGLE;
     Triangle t;
 
-    // ¶¥µã×ø±ê
+    // é¡¶ç‚¹åæ ‡
     t.p1 = texelFetch(triangles, offset + 0).xyz;
     t.p2 = texelFetch(triangles, offset + 1).xyz;
     t.p3 = texelFetch(triangles, offset + 2).xyz;
-    // ·¨Ïß
+    // æ³•çº¿
     t.n1 = texelFetch(triangles, offset + 3).xyz;
     t.n2 = texelFetch(triangles, offset + 4).xyz;
     t.n3 = texelFetch(triangles, offset + 5).xyz;
@@ -176,7 +184,7 @@ Triangle getTriangle(int i) {
     return t;
 }
 
-// »ñÈ¡µÚ i ÏÂ±êµÄÈı½ÇĞÎµÄ²ÄÖÊ
+// è·å–ç¬¬ i ä¸‹æ ‡çš„ä¸‰è§’å½¢çš„æè´¨
 Material getMaterial(int i) {
     Material m;
 
@@ -204,11 +212,11 @@ Material getMaterial(int i) {
     return m;
 }
 
-// »ñÈ¡µÚ i ÏÂ±êµÄ BVHNode ¶ÔÏó
+// è·å–ç¬¬ i ä¸‹æ ‡çš„ BVHNode å¯¹è±¡
 BVHNode getBVHNode(int i) {
     BVHNode node;
 
-    // ×óÓÒ×ÓÊ÷
+    // å·¦å³å­æ ‘
     int offset = i * SIZE_BVHNODE;
     ivec3 childs = ivec3(texelFetch(nodes, offset + 0).xyz);
     ivec3 leafInfo = ivec3(texelFetch(nodes, offset + 1).xyz);
@@ -217,7 +225,7 @@ BVHNode getBVHNode(int i) {
     node.n = int(leafInfo.x);
     node.index = int(leafInfo.y);
 
-    // °üÎ§ºĞ
+    // åŒ…å›´ç›’
     node.AA = texelFetch(nodes, offset + 2).xyz;
     node.BB = texelFetch(nodes, offset + 3).xyz;
 
@@ -226,8 +234,49 @@ BVHNode getBVHNode(int i) {
 
 // ----------------------------------------------------------------------------- //
 
-// ¹âÏßºÍÈı½ÇĞÎÇó½» 
-HitResult hitTriangle(Triangle triangle, Ray ray) {
+/*
+
+HitResult hitTriangle(Triangle triangle, Ray ray)
+{
+    HitResult hitResult;
+    hitResult.distance = INF;
+    hitResult.isHit = false;
+
+    const float EPSILON = 0.000001f;
+
+    vec3 orig = ray.startPoint;
+    vec3 dir  = ray.direction;
+    vec3 v0 = triangle.p1;
+    vec3 v1 = triangle.p2;
+    vec3 v2 = triangle.p3;
+
+    vec3 S = orig - v0;
+    vec3 E1 = v1 - v0;
+    vec3 E2 = v2 - v0;
+    vec3 S1 = cross(dir, E2);
+    vec3 S2 = cross(S, E1);
+
+    float S1E1 = dot(S1, E1);
+    float t = dot(S2, E2) / S1E1;
+    float b1 = dot(S1, S) / S1E1;
+    float b2 = dot(S2, dir) / S1E1;
+
+    if (t >= EPSILON && b1 >= EPSILON && b2 >= EPSILON && (1 - b1 - b2) >= EPSILON) {
+        hitResult.isHit = true;
+        hitResult.distance = t;
+        hitResult.hitPoint = ray.startPoint + ray.direction * t;
+        hitResult.normal = normalize(triangle.n1 * (1.0f - b1 - b2) + triangle.n2 * b1 + triangle.n3 * b2);
+        hitResult.viewDir = ray.direction;
+    }
+
+    return hitResult;
+}
+*/
+
+
+// å…‰çº¿å’Œä¸‰è§’å½¢æ±‚äº¤ 
+HitResult hitTriangle(Triangle triangle, Ray ray) 
+{
     HitResult res;
     res.distance = INF;
     res.isHit = false;
@@ -237,41 +286,41 @@ HitResult hitTriangle(Triangle triangle, Ray ray) {
     vec3 p2 = triangle.p2;
     vec3 p3 = triangle.p3;
 
-    vec3 S = ray.startPoint;    // ÉäÏßÆğµã
-    vec3 d = ray.direction;     // ÉäÏß·½Ïò
-    vec3 N = normalize(cross(p2-p1, p3-p1));    // ·¨ÏòÁ¿
+    vec3 S = ray.startPoint;    // å°„çº¿èµ·ç‚¹
+    vec3 d = ray.direction;     // å°„çº¿æ–¹å‘
+    vec3 N = normalize(cross(p2-p1, p3-p1));    // æ³•å‘é‡
 
-    // ´ÓÈı½ÇĞÎ±³ºó£¨Ä£ĞÍÄÚ²¿£©»÷ÖĞ
+    // ä»ä¸‰è§’å½¢èƒŒåï¼ˆæ¨¡å‹å†…éƒ¨ï¼‰å‡»ä¸­
     if (dot(N, d) > 0.0f) {
         N = -N;   
         res.isInside = true;
     }
 
-    // Èç¹ûÊÓÏßºÍÈı½ÇĞÎÆ½ĞĞ
+    // å¦‚æœè§†çº¿å’Œä¸‰è§’å½¢å¹³è¡Œ
     if (abs(dot(N, d)) < 0.00001f) return res;
 
-    // ¾àÀë
+    // è·ç¦»
     float t = (dot(N, p1) - dot(S, N)) / dot(d, N);
-    if (t < 0.0005f) return res;    // Èç¹ûÈı½ÇĞÎÔÚ¹âÏß±³Ãæ
+    if (t < 0.0005f) return res;    // å¦‚æœä¸‰è§’å½¢åœ¨å…‰çº¿èƒŒé¢
 
-    // ½»µã¼ÆËã
+    // äº¤ç‚¹è®¡ç®—
     vec3 P = S + d * t;
 
-    // ÅĞ¶Ï½»µãÊÇ·ñÔÚÈı½ÇĞÎÖĞ
+    // åˆ¤æ–­äº¤ç‚¹æ˜¯å¦åœ¨ä¸‰è§’å½¢ä¸­
     vec3 c1 = cross(p2 - p1, P - p1);
     vec3 c2 = cross(p3 - p2, P - p2);
     vec3 c3 = cross(p1 - p3, P - p3);
     bool r1 = (dot(c1, N) > 0 && dot(c2, N) > 0 && dot(c3, N) > 0);
     bool r2 = (dot(c1, N) < 0 && dot(c2, N) < 0 && dot(c3, N) < 0);
 
-    // ÃüÖĞ£¬·â×°·µ»Ø½á¹û
+    // å‘½ä¸­ï¼Œå°è£…è¿”å›ç»“æœ
     if (r1 || r2) {
         res.isHit = true;
         res.hitPoint = P;
         res.distance = t;
         res.normal = N;
         res.viewDir = d;
-        // ¸ù¾İ½»µãÎ»ÖÃ²åÖµ¶¥µã·¨Ïß
+        // æ ¹æ®äº¤ç‚¹ä½ç½®æ’å€¼é¡¶ç‚¹æ³•çº¿
         float alpha = (-(P.x-p2.x)*(p3.y-p2.y) + (P.y-p2.y)*(p3.x-p2.x)) / (-(p1.x-p2.x-0.00005)*(p3.y-p2.y+0.00005) + (p1.y-p2.y+0.00005)*(p3.x-p2.x+0.00005));
         float beta  = (-(P.x-p3.x)*(p1.y-p3.y) + (P.y-p3.y)*(p1.x-p3.x)) / (-(p2.x-p3.x-0.00005)*(p1.y-p3.y+0.00005) + (p2.y-p3.y+0.00005)*(p1.x-p3.x+0.00005));
         float gama  = 1.0 - alpha - beta;
@@ -283,7 +332,7 @@ HitResult hitTriangle(Triangle triangle, Ray ray) {
     return res;
 }
 
-// ºÍ aabb ºĞ×ÓÇó½»£¬Ã»ÓĞ½»µãÔò·µ»Ø -1
+// å’Œ aabb ç›’å­æ±‚äº¤ï¼Œæ²¡æœ‰äº¤ç‚¹åˆ™è¿”å› -1
 float hitAABB(Ray r, vec3 AA, vec3 BB) {
     vec3 invdir = 1.0 / r.direction;
 
@@ -301,7 +350,7 @@ float hitAABB(Ray r, vec3 AA, vec3 BB) {
 
 // ----------------------------------------------------------------------------- //
 
-// ±©Á¦±éÀúÊı×éÏÂ±ê·¶Î§ [l, r] Çó×î½ü½»µã
+// æš´åŠ›éå†æ•°ç»„ä¸‹æ ‡èŒƒå›´ [l, r] æ±‚æœ€è¿‘äº¤ç‚¹
 HitResult hitArray(Ray ray, int l, int r) {
     HitResult res;
     res.isHit = false;
@@ -317,13 +366,13 @@ HitResult hitArray(Ray ray, int l, int r) {
     return res;
 }
 
-// ±éÀú BVH Çó½»
+// éå† BVH æ±‚äº¤
 HitResult hitBVH(Ray ray) {
     HitResult res;
     res.isHit = false;
     res.distance = INF;
 
-    // Õ»
+    // æ ˆ
     int stack[256];
     int sp = 0;
 
@@ -332,7 +381,7 @@ HitResult hitBVH(Ray ray) {
         int top = stack[--sp];
         BVHNode node = getBVHNode(top);
         
-        // ÊÇÒ¶×Ó½Úµã£¬±éÀúÈı½ÇĞÎ£¬Çó×î½ü½»µã
+        // æ˜¯å¶å­èŠ‚ç‚¹ï¼Œéå†ä¸‰è§’å½¢ï¼Œæ±‚æœ€è¿‘äº¤ç‚¹
         if(node.n>0) {
             int L = node.index;
             int R = node.index + node.n - 1;
@@ -341,9 +390,9 @@ HitResult hitBVH(Ray ray) {
             continue;
         }
         
-        // ºÍ×óÓÒºĞ×Ó AABB Çó½»
-        float d1 = INF; // ×óºĞ×Ó¾àÀë
-        float d2 = INF; // ÓÒºĞ×Ó¾àÀë
+        // å’Œå·¦å³ç›’å­ AABB æ±‚äº¤
+        float d1 = INF; // å·¦ç›’å­è·ç¦»
+        float d2 = INF; // å³ç›’å­è·ç¦»
         if(node.left>0) {
             BVHNode leftNode = getBVHNode(node.left);
             d1 = hitAABB(ray, leftNode.AA, leftNode.BB);
@@ -353,18 +402,18 @@ HitResult hitBVH(Ray ray) {
             d2 = hitAABB(ray, rightNode.AA, rightNode.BB);
         }
 
-        // ÔÚ×î½üµÄºĞ×ÓÖĞËÑË÷
+        // åœ¨æœ€è¿‘çš„ç›’å­ä¸­æœç´¢
         if(d1>0 && d2>0) {
-            if(d1<d2) { // d1<d2, ×ó±ßÏÈ
+            if(d1<d2) { // d1<d2, å·¦è¾¹å…ˆ
                 stack[sp++] = node.right;
                 stack[sp++] = node.left;
-            } else {    // d2<d1, ÓÒ±ßÏÈ
+            } else {    // d2<d1, å³è¾¹å…ˆ
                 stack[sp++] = node.left;
                 stack[sp++] = node.right;
             }
-        } else if(d1>0) {   // ½öÃüÖĞ×ó±ß
+        } else if(d1>0) {   // ä»…å‘½ä¸­å·¦è¾¹
             stack[sp++] = node.left;
-        } else if(d2>0) {   // ½öÃüÖĞÓÒ±ß
+        } else if(d2>0) {   // ä»…å‘½ä¸­å³è¾¹
             stack[sp++] = node.right;
         }
     }
@@ -372,43 +421,170 @@ HitResult hitBVH(Ray ray) {
     return res;
 }
 
+
 // ----------------------------------------------------------------------------- //
 
-// Â·¾¶×·×Ù
+float SchlickFresnel(float u)
+{
+    float m = clamp(1-u, 0, 1);
+    float m2 = m*m;
+    return m2*m2*m; // pow(m,5)
+}
+
+float GTR1(float NdotH, float a)
+{
+    if (a >= 1) return 1/PI;
+    float a2 = a*a;
+    float t = 1 + (a2-1)*NdotH*NdotH;
+    return (a2-1) / (PI*log(a2)*t);
+}
+
+float GTR2(float NdotH, float a)
+{
+    float a2 = a*a;
+    float t = 1 + (a2-1)*NdotH*NdotH;
+    return a2 / (PI * t*t);
+}
+
+float GTR2_aniso(float NdotH, float HdotX, float HdotY, float ax, float ay)
+{
+    return 1 / (PI * ax*ay * sqr( sqr(HdotX/ax) + sqr(HdotY/ay) + NdotH*NdotH ));
+}
+
+float smithG_GGX(float NdotV, float alphaG)
+{
+    float a = alphaG*alphaG;
+    float b = NdotV*NdotV;
+    return 1 / (NdotV + sqrt(a + b - a*b));
+}
+
+float smithG_GGX_aniso(float NdotV, float VdotX, float VdotY, float ax, float ay)
+{
+    return 1 / (NdotV + sqrt( sqr(VdotX*ax) + sqr(VdotY*ay) + sqr(NdotV) ));
+}
+
+vec3 mon2lin(vec3 x)
+{
+    return vec3(pow(x[0], 2.2), pow(x[1], 2.2), pow(x[2], 2.2));
+}
+
+vec3 BRDF(vec3 V, vec3 N, vec3 L, vec3 X, vec3 Y, in Material material) {
+    float NdotL = dot(N, L);
+    float NdotV = dot(N, V);
+    if(NdotL < 0 || NdotV < 0) return vec3(0);
+
+    vec3 H = normalize(L + V);
+    float NdotH = dot(N, H);
+    float LdotH = dot(L, H);
+
+    vec3 Cdlin = material.baseColor;
+    //vec3 Cdlin = mon2lin(baseColor); //gamma to liner
+    float Cdlum = 0.3 * Cdlin.r + 0.6 * Cdlin.g  + 0.1 * Cdlin.b; //äº®åº¦è¿‘ä¼¼å€¼
+    vec3 Ctint = (Cdlum > 0) ? (Cdlin/Cdlum) : (vec3(1));   
+    vec3 Cspec = material.specular * mix(vec3(1), Ctint, material.specularTint);
+    vec3 Cspec0 = mix(0.08*Cspec, Cdlin, material.metallic); // 0Â° é•œé¢åå°„é¢œè‰²
+    vec3 Csheen = mix(vec3(1), Ctint, material.sheenTint);   // ç»‡ç‰©é¢œè‰²
+
+    // æ¼«åå°„ åŸºäºç²—ç³™åº¦çš„æ¼«åå°„æ··åˆ
+    float Fd90 = 0.5 + 2.0 * LdotH * LdotH * material.roughness;
+    float FL = SchlickFresnel(NdotL);
+    float FV = SchlickFresnel(NdotV);
+    float Fd = mix(1.0, Fd90, FL) * mix(1.0, Fd90, FV);         
+
+    // æ¬¡è¡¨é¢æ•£å°„
+    float Fss90 = LdotH * LdotH * material.roughness;
+    float Fss = mix(1.0, Fss90, FL) * mix(1.0, Fss90, FV);
+    float ss = 1.25 * (Fss * (1.0 / (NdotL + NdotV) - 0.5) + 0.5);
+
+    //é•œé¢åå°„
+    float aspect = sqrt(1.0 - material.anisotropic * 0.9);
+    float ax = max(0.001, sqr(material.roughness)/aspect);
+    float ay = max(0.001, sqr(material.roughness)*aspect);
+    float Ds = GTR2_aniso(NdotH, dot(H, X), dot(H, Y), ax, ay);
+    float FH = SchlickFresnel(LdotH);
+    vec3 Fs = mix(Cspec0, vec3(1), FH);
+    float Gs;
+    Gs  = smithG_GGX_aniso(NdotL, dot(L, X), dot(L, Y), ax, ay);
+    Gs *= smithG_GGX_aniso(NdotV, dot(V, X), dot(V, Y), ax, ay);
+
+    // sheen
+    vec3 Fsheen = FH * material.sheen * Csheen;
+
+    // clearcoat (ior = 1.5 -> F0 = 0.04)
+    float Dr = GTR1(NdotH, mix(.1,.001, material.clearcoatGloss));
+    float Fr = mix(0.04, 1.0, FH);
+    float Gr = smithG_GGX(NdotL, 0.25) * smithG_GGX(NdotV, 0.25);
+
+    vec3 diffuse = (1.0/PI) * mix(Fd, ss, material.subsurface) * Cdlin + Fsheen;
+    vec3 specular = Gs * Fs * Ds;
+    vec3 clearcoat = vec3(0.25 * Gr * Fr * Dr * material.clearcoat);
+
+    return diffuse * (1.0 - material.metallic) + specular + clearcoat;
+}
+
+// ----------------------------------------------------------------------------- //
+
+vec3 sampleCosineWeightedHemisphere(vec3 normal) {
+    float r1 = rand();  // 0-1ä¹‹é—´çš„éšæœºæ•°
+    float r2 = rand();  // 0-1ä¹‹é—´çš„éšæœºæ•°
+
+    float theta = 2.0 * PI * r1;  // åœ¨åŠçƒä¸Šå‡åŒ€é‡‡æ ·è§’åº¦
+    float phi = acos(sqrt(r2));   // æ ¹æ®CosineåŠ æƒé‡‡æ ·é«˜åº¦
+
+    // å°†æåæ ‡è½¬æ¢ä¸ºç¬›å¡å°”åæ ‡
+    float x = cos(theta) * sin(phi);
+    float y = sin(theta) * sin(phi);
+    float z = cos(phi);
+
+    // æ„å»ºä¸æ³•çº¿å‚ç›´çš„åŸºå‘é‡
+    vec3 tangent = normalize(abs(normal.x) > 0.1 ? cross(normal, vec3(0, 1, 0)) : cross(normal, vec3(1, 0, 0)));
+    vec3 bitangent = cross(normal, tangent);
+
+    // å°†é‡‡æ ·ç‚¹è½¬æ¢åˆ°ä¸–ç•Œç©ºé—´
+    return normalize(tangent * x + bitangent * y + normal * z);
+}
+
+// è·¯å¾„è¿½è¸ª
 vec3 pathTracing(HitResult hit, int maxBounce) {
 
-    vec3 Lo = vec3(0);      // ×îÖÕµÄÑÕÉ«
-    vec3 history = vec3(1); // µİ¹é»ıÀÛµÄÑÕÉ«
+    vec3 Lo = vec3(0);      // æœ€ç»ˆçš„é¢œè‰²
+    vec3 history = vec3(1); // é€’å½’ç§¯ç´¯çš„é¢œè‰²
 
-    for(int bounce=0; bounce<maxBounce; bounce++) {
-        // Ëæ»ú³öÉä·½Ïò wi
-        vec3 wi = toNormalHemisphere(SampleHemisphere(), hit.normal);
+    for(int bounce=0; bounce<maxBounce; bounce++) 
+    {
+        vec3 V = hit.viewDir;
+        vec3 N = hit.normal;
+        //vec3 L = toNormalHemisphere(SampleHemisphere(), hit.normal); // éšæœºå‡ºå°„æ–¹å‘ wi
+        vec3 L = sampleCosineWeightedHemisphere(hit.normal);
 
-        // Âş·´Éä: Ëæ»ú·¢Éä¹âÏß
+        float pdf = 1.0 / (2.0 * PI);                                   // åŠçƒå‡åŒ€é‡‡æ ·æ¦‚ç‡å¯†åº¦
+        float cosine_o = max(0, dot(V, N));                             // å…¥å°„å…‰å’Œæ³•çº¿å¤¹è§’ä½™å¼¦
+        float cosine_i = max(0, dot(L, N));                             // å‡ºå°„å…‰å’Œæ³•çº¿å¤¹è§’ä½™å¼¦
+        vec3 tangent, bitangent;
+        getTangent(N, tangent, bitangent);
+        //vec3 f_r = BRDF(V, N, L, tangent, bitangent, hit.material);
+        vec3 f_r = hit.material.baseColor / PI;                         // æ¼«åå°„ BRDF
+
+        // æ¼«åå°„: éšæœºå‘å°„å…‰çº¿
         Ray randomRay;
         randomRay.startPoint = hit.hitPoint;
-        randomRay.direction = wi;
+        randomRay.direction = L;
         HitResult newHit = hitBVH(randomRay);
 
-        float pdf = 1.0 / (2.0 * PI);                                   // °ëÇò¾ùÔÈ²ÉÑù¸ÅÂÊÃÜ¶È
-        float cosine_o = max(0, dot(-hit.viewDir, hit.normal));         // ÈëÉä¹âºÍ·¨Ïß¼Ğ½ÇÓàÏÒ
-        float cosine_i = max(0, dot(randomRay.direction, hit.normal));  // ³öÉä¹âºÍ·¨Ïß¼Ğ½ÇÓàÏÒ
-        vec3 f_r = hit.material.baseColor / PI;                         // Âş·´Éä BRDF
-
-        // Î´ÃüÖĞ
+        // æœªå‘½ä¸­
         if(!newHit.isHit) {
             vec3 skyColor = sampleHdr(randomRay.direction);
             Lo += history * skyColor * f_r * cosine_i / pdf;
             break;
         }
         
-        // ÃüÖĞ¹âÔ´»ıÀÛÑÕÉ«
+        // å‘½ä¸­å…‰æºç§¯ç´¯é¢œè‰²
         vec3 Le = newHit.material.emissive;
         Lo += history * Le * f_r * cosine_i / pdf;
         
-        // µİ¹é(²½½ø)
+        // é€’å½’(æ­¥è¿›)
         hit = newHit;
-        history *= f_r * cosine_i / pdf;  // ÀÛ»ıÑÕÉ«
+        history *= f_r * cosine_i / pdf;  // ç´¯ç§¯é¢œè‰²
     }
     
     return Lo;
@@ -418,7 +594,7 @@ vec3 pathTracing(HitResult hit, int maxBounce) {
 
 void main() {
 
-    // Í¶Éä¹âÏß
+    // æŠ•å°„å…‰çº¿
     Ray ray;
     
     ray.startPoint = eye;
@@ -431,7 +607,6 @@ void main() {
     vec3 color;
     
     if(!firstHit.isHit) {
-        color = vec3(0);
         color = sampleHdr(ray.direction);
     } else {
         vec3 Le = firstHit.material.emissive;
@@ -441,10 +616,10 @@ void main() {
     
     if(!Reset)
     {
-        // ºÍÉÏÒ»Ö¡»ìºÏ
+        // å’Œä¸Šä¸€å¸§æ··åˆ
         vec3 lastColor = texture(lastFrame, pix.xy*0.5+0.5).rgb;
         color = mix(lastColor, color, 1.0/float(frameCounter+1));
     }
-    // Êä³ö
+    // è¾“å‡º
     gl_FragData[0] = vec4(color, 1.0);
 }

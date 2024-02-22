@@ -5,18 +5,6 @@
 
 #include "App/HDRLoader.h"
 
-GLuint getTextureRGB32F(int width, int height) {
-    GLuint tex;
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    return tex;
-}
-
 PathTracing::PathTracing()
 	:
 	pass1("./assets/shaders/vshader.vert", "./assets/shaders/fshader.frag"),
@@ -26,13 +14,6 @@ PathTracing::PathTracing()
 	pass1.CreateFrameBuffer(1);
 	pass2.CreateFrameBuffer(1);
 	pass3.CreateFrameBuffer(0);
-
-	//	// hdr 全景图
-	//	HDRLoaderResult hdrRes;
-	//	bool r = HDRLoader::load("./assets/textures/HDR/sunset.hdr", hdrRes);
-	//	hdrMap = getTextureRGB32F(hdrRes.width, hdrRes.height);
-	//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, hdrRes.width, hdrRes.height, 0, GL_RGB, GL_FLOAT, hdrRes.cols);
-
 }
 
 void PathTracing::Render(Camera& camera, Scene& scene)
@@ -41,6 +22,7 @@ void PathTracing::Render(Camera& camera, Scene& scene)
 	{
 		ProcessData(scene.m_TriangleEncoded);
 		//CreateFrameBuffer();
+
 	}
 	pass1.GetShader().use();
 	glActiveTexture(GL_TEXTURE0);
@@ -56,7 +38,7 @@ void PathTracing::Render(Camera& camera, Scene& scene)
 	pass1.GetShader().setInt("lastFrame", 2);
 
 	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, hdrMap);
+	glBindTexture(GL_TEXTURE_2D, scene.envMapID);
 	pass1.GetShader().setInt("hdrMap", 3);
 
 	pass1.GetShader().setInt("frameCounter", m_frameIndex ++);

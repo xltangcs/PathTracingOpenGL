@@ -4,45 +4,42 @@
 
 Scene CreatBaseScene()
 {
-	//// hdr È«¾°Í¼
-	//HDRLoaderResult hdrRes;
-	//bool r = HDRLoader::load("./assets/textures/HDR/sunset.hdr", hdrRes);
-	//hdrMap = getTextureRGB32F(hdrRes.width, hdrRes.height);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, hdrRes.width, hdrRes.height, 0, GL_RGB, GL_FLOAT, hdrRes.cols);
+	Scene scene("Base Scene");
 
-	Scene m_Scene("Base Scene");
-
-	int BunnyID = m_Scene.AddModel("./assets/models/Stanford Bunny.obj");
+	int BunnyID = scene.AddModel("./assets/models/Stanford Bunny.obj");
 	Material BunnyMat;
 	BunnyMat.baseColor = glm::vec3(1, 0, 0);
-	int BunnyMatId = m_Scene.AddMaterial(BunnyMat);
+	int BunnyMatId = scene.AddMaterial(BunnyMat);
 	glm::mat4 BunnyTrans = glm::mat4(1.0f);
 	BunnyTrans = glm::translate(BunnyTrans, glm::vec3(0.0f, -0.0f, -1.0f)) * glm::scale(BunnyTrans, glm::vec3(4.0f, 4.0f, 4.0f));
 	ModelInstance Bunny("Bunny", BunnyID, BunnyTrans, BunnyMatId);
-	m_Scene.AddModelInstance(Bunny);
+	scene.AddModelInstance(Bunny);
 
-	int quadId = m_Scene.AddModel("./assets/models/Cube.obj");
+	int quadId = scene.AddModel("./assets/models/Cube.obj");
 	Material blueColor;
 	blueColor.baseColor = glm::vec3(0.725, 0.71, 0.68);
 	//blueColor.emissive = glm::vec3(30, 20, 10);
-	int blueMatId = m_Scene.AddMaterial(blueColor);
+	int blueMatId = scene.AddMaterial(blueColor);
 	glm::mat4 quadTrans = glm::mat4(1.0f);
-	quadTrans = glm::translate(quadTrans, glm::vec3(0.0f, -1.0f, -1.0f)) 
+	quadTrans = glm::translate(quadTrans, glm::vec3(0.0f, -2.0f, -1.0f)) 
 		//* glm::rotate(quadTrans, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f))
-		* glm::scale(quadTrans, glm::vec3(5.0f, 1.0f, 5.0f));
+		* glm::scale(quadTrans, glm::vec3(5.0f, 0.1f, 5.0f));
 	ModelInstance quad("Cube", quadId, quadTrans, blueMatId);
-	m_Scene.AddModelInstance(quad);
+	scene.AddModelInstance(quad);
 
-	int shpereId = m_Scene.AddModel("./assets/models/Sphere.obj");
+	int shpereId = scene.AddModel("./assets/models/Sphere.obj");
 	Material whiteColor;
 	whiteColor.baseColor = glm::vec3(1, 1, 1);
 	whiteColor.emissive = glm::vec3(30, 20, 10);
-	int whiteMatId = m_Scene.AddMaterial(whiteColor);
+	int whiteMatId = scene.AddMaterial(whiteColor);
 	glm::mat4 sphereTrans = glm::mat4(1.0f);
 	sphereTrans = glm::translate(sphereTrans, glm::vec3(0.0f, 1.5f, -2.0f)) * glm::scale(sphereTrans, glm::vec3(0.15, 0.15, 0.15));
 	ModelInstance sphere("Sphere", shpereId, sphereTrans, whiteMatId);
-	m_Scene.AddModelInstance(sphere);
+	scene.AddModelInstance(sphere);
 
-	m_Scene.ProcessScene();
-	return m_Scene;
+
+	scene.AddEnvMap("./assets/textures/HDR/sunset.hdr");
+
+	scene.ProcessScene();
+	return scene;
 }

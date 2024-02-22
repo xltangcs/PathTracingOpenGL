@@ -3,6 +3,8 @@
 //#include <algorithm>
 //#include <iostream>
 
+#include <glad/glad.h>
+
 int Scene::AddModel(const std::string& filename)
 {
     int id = -1;
@@ -47,6 +49,25 @@ int Scene::AddModelInstance(const ModelInstance& instances)
     int id = m_Instances.size();
     m_Instances.push_back(instances);
     return 0;
+}
+
+void Scene::AddEnvMap(const std::string& filename)
+{
+    HDRLoaderResult hdrRes;
+    bool r = HDRLoader::load("./assets/textures/HDR/sunset.hdr", hdrRes);
+    if (!r)
+    {
+        printf("Failed to load %s\n", filename.c_str());
+        return;
+    }
+    glGenTextures(1, &envMapID);
+    glBindTexture(GL_TEXTURE_2D, envMapID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, hdrRes.width, hdrRes.height, 0, GL_RGB, GL_FLOAT, hdrRes.cols);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, hdrRes.width, hdrRes.height, 0, GL_RGB, GL_FLOAT, hdrRes.cols);
 }
 
 void Scene::ProcessScene()

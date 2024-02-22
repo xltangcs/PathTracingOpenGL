@@ -78,7 +78,7 @@ void RenderPass::Draw(std::vector<GLuint> texPassArray)
         m_Shader.setInt(uName.c_str(), i);
         //glUniform1i(glGetUniformLocation(program, uName.c_str()), i);
     }
-    glViewport(0, 0, m_Width, m_Height);
+    //glViewport(0, 0, m_Width, m_Height);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
