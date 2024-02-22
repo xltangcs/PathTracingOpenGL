@@ -20,7 +20,7 @@ uniform sampler2D hdrMap;
 uniform vec3 eye;
 uniform mat4 cameraRotate;
 
-uniform bool cameraMoved;
+uniform bool Reset;
 
 // ----------------------------------------------------------------------------- //
 
@@ -439,7 +439,7 @@ void main() {
         color = Le + Li;
     }  
     
-    if(!cameraMoved)
+    if(!Reset)
     {
         // 和上一帧混合
         vec3 lastColor = texture(lastFrame, pix.xy*0.5+0.5).rgb;

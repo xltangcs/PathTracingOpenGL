@@ -20,14 +20,12 @@ public:
 
 	GLuint CreatTextureBuffer(int size, const void* data);
 	void ProcessData(std::vector<TriangleEncoded> triangleEncodeds);
-	void CreateFrameBuffer();
-
 
 private:
 	unsigned int m_Width = 1280, m_Height = 720;
 
-	GLuint m_TrianglesTexture;
-	GLuint m_BVHNodesTexture;
+	GLuint m_TrianglesTexture = -1;
+	GLuint m_BVHNodesTexture = -1;
 	GLuint hdrMap;
 
 	//std::vector<TriangleEncoded> m_TriangleEncodeds;

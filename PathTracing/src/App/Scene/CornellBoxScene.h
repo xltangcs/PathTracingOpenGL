@@ -19,7 +19,7 @@ Scene CornellBoxScene()
 	red.baseColor = glm::vec3(0.63f, 0.065f, 0.05f);
 
 	Material green;
-	green.baseColor = glm::vec3(0.0f, 0.71f, 0.0f);
+	green.baseColor = glm::vec3(0.14f, 0.45f, 0.091f);
 
 	Material light;
 	light.emissive = glm::vec3(17,12,4);

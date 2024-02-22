@@ -23,47 +23,15 @@ PathTracing::PathTracing()
 	pass2("./assets/shaders/vshader.vert", "./assets/shaders/pass2.frag"),
 	pass3("./assets/shaders/vshader.vert", "./assets/shaders/pass3.frag")
 {
+	pass1.CreateFrameBuffer(1);
+	pass2.CreateFrameBuffer(1);
+	pass3.CreateFrameBuffer(0);
 
-	//{
 	//	// hdr 全景图
 	//	HDRLoaderResult hdrRes;
 	//	bool r = HDRLoader::load("./assets/textures/HDR/sunset.hdr", hdrRes);
 	//	hdrMap = getTextureRGB32F(hdrRes.width, hdrRes.height);
 	//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, hdrRes.width, hdrRes.height, 0, GL_RGB, GL_FLOAT, hdrRes.cols);
-
-
-	//	int BunnyID = m_Scene.AddModel("./assets/models/Stanford Bunny.obj");
-	//	Material BunnyMat;
-	//	BunnyMat.baseColor = glm::vec3(1, 0, 0);
-	//	int BunnyMatId = m_Scene.AddMaterial(BunnyMat);
-	//	glm::mat4 BunnyTrans = glm::mat4(1.0f);
-	//	BunnyTrans = glm::translate(BunnyTrans, glm::vec3(0.0f, -0.1f, 0.0f)) * glm::scale(BunnyTrans, glm::vec3(4.0f, 4.0f, 4.0f));
-	//	ModelInstance Bunny("Bunny", BunnyID, BunnyTrans, BunnyMatId);
-	//	m_Scene.AddModelInstance(Bunny);
-
-
-	//	int quadId = m_Scene.AddModel("./assets/models/quad.obj");
-	//	Material blueColor;
-	//	blueColor.baseColor = glm::vec3(0.725, 0.71, 0.68);
-	//	int blueMatId = m_Scene.AddMaterial(blueColor);
-	//	glm::mat4 quadTrans = glm::mat4(1.0f);
-	//	quadTrans = glm::translate(quadTrans, glm::vec3(0.0f, -2.0f, 0.0f)) * glm::scale(quadTrans, glm::vec3(20.0f, 0.01f, 20.0f));
-	//	ModelInstance quad("Cube", quadId, quadTrans, blueMatId);
-	//	m_Scene.AddModelInstance(quad);
-
-
-	//	int shpereId = m_Scene.AddModel("./assets/models/sphere.obj");
-	//	Material whiteColor;
-	//	whiteColor.baseColor = glm::vec3(1, 1, 1);
-	//	whiteColor.emissive = glm::vec3(30, 20, 10);
-	//	int whiteMatId = m_Scene.AddMaterial(whiteColor);
-	//	glm::mat4 sphereTrans = glm::mat4(1.0f);
-	//	sphereTrans = glm::translate(sphereTrans, glm::vec3(0.0, 0.9, 0.0)) * glm::scale(sphereTrans, glm::vec3(0.1, 0.1, 0.1));
-	//	ModelInstance sphere("Sphere", shpereId, sphereTrans, whiteMatId);
-	//	m_Scene.AddModelInstance(sphere);
-
-	//	m_Scene.ProcessScene(m_TriangleEncodeds);
-	//}
 
 }
 
@@ -72,7 +40,7 @@ void PathTracing::Render(Camera& camera, Scene& scene)
 	if (isNewScene)
 	{
 		ProcessData(scene.m_TriangleEncoded);
-		CreateFrameBuffer();
+		//CreateFrameBuffer();
 	}
 	pass1.GetShader().use();
 	glActiveTexture(GL_TEXTURE0);
@@ -92,7 +60,7 @@ void PathTracing::Render(Camera& camera, Scene& scene)
 	pass1.GetShader().setInt("hdrMap", 3);
 
 	pass1.GetShader().setInt("frameCounter", m_frameIndex ++);
-	pass1.GetShader().setInt("cameraMoved", camera.isCameraMoved);
+	pass1.GetShader().setInt("Reset", camera.isCameraMoved || isNewScene);
 	pass1.GetShader().setInt("width", m_Width);
 	pass1.GetShader().setInt("height", m_Height);
 	pass1.GetShader().setVec3("eye", camera.GetPosition());
@@ -101,7 +69,6 @@ void PathTracing::Render(Camera& camera, Scene& scene)
 	pass1.Draw();
 	pass2.Draw(pass1.colorAttachments);
 	pass3.Draw(pass2.colorAttachments);
-
 }
 
 void PathTracing::OnResize(unsigned int width, unsigned int height)
@@ -157,11 +124,4 @@ void PathTracing::ProcessData(std::vector<TriangleEncoded> triangleEncodeds)
 
 	std::cout << "Triangles : " << nTriangles << std::endl;
 	std::cout << "BVHNodes : " << nBVHNodes << std::endl;
-}
-
-void PathTracing::CreateFrameBuffer()
-{
-	pass1.CreateFrameBuffer(1);
-	pass2.CreateFrameBuffer(1);
-	pass3.CreateFrameBuffer(0);
 }
