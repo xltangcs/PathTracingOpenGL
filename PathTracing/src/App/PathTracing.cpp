@@ -18,12 +18,8 @@ PathTracing::PathTracing()
 
 void PathTracing::Render(Camera& camera, Scene& scene)
 {
-	if (isNewScene)
-	{
-		ProcessData(scene.m_TriangleEncoded);
-		//CreateFrameBuffer();
-
-	}
+	if (isNewScene) ProcessData(scene.m_TriangleEncoded);
+	if (camera.isCameraMoved || isNewScene) m_frameIndex = 0;
 	pass1.GetShader().use();
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_BUFFER, m_TrianglesTexture);
@@ -82,7 +78,7 @@ GLuint PathTracing::CreatTextureBuffer(int size, const void* data)
 	return textureid;
 }
 
-void PathTracing::ProcessData(std::vector<TriangleEncoded> triangleEncodeds)
+void PathTracing::ProcessData(std::vector<TriangleEncoded>& triangleEncodeds)
 {
 	std::vector<BVHNodeEncoded> m_BVHNodeEncodeds;
 

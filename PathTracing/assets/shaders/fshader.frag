@@ -29,7 +29,7 @@ uniform bool Reset;
 #define SIZE_BVHNODE    4
 
 const float PI = 3.14159265358979323846;
-
+const float EPSILON = 0.000001f;
 float sqr(float x) { return x*x; }
 
 // ----------------------------------------------------------------------------- //
@@ -234,15 +234,13 @@ BVHNode getBVHNode(int i) {
 
 // ----------------------------------------------------------------------------- //
 
-/*
 
-HitResult hitTriangle(Triangle triangle, Ray ray)
+
+HitResult hitTriangle1(Triangle triangle, Ray ray)
 {
     HitResult hitResult;
     hitResult.distance = INF;
     hitResult.isHit = false;
-
-    const float EPSILON = 0.000001f;
 
     vec3 orig = ray.startPoint;
     vec3 dir  = ray.direction;
@@ -265,22 +263,23 @@ HitResult hitTriangle(Triangle triangle, Ray ray)
         hitResult.isHit = true;
         hitResult.distance = t;
         hitResult.hitPoint = ray.startPoint + ray.direction * t;
-        hitResult.normal = normalize(triangle.n1 * (1.0f - b1 - b2) + triangle.n2 * b1 + triangle.n3 * b2);
+        //hitResult.normal = normalize(triangle.n1 * (1.0f - b1 - b2) + triangle.n2 * b1 + triangle.n3 * b2);
+        hitResult.normal = normalize(cross(E1, E2));
+
+        if (dot(hitResult.normal, dir) >= EPSILON) hitResult.normal = -hitResult.normal;
         hitResult.viewDir = ray.direction;
     }
 
     return hitResult;
 }
-*/
 
 
 // 光线和三角形求交 
-HitResult hitTriangle(Triangle triangle, Ray ray) 
-{
+HitResult hitTriangle(Triangle triangle, Ray ray) {
     HitResult res;
     res.distance = INF;
     res.isHit = false;
-    res.isInside = false;
+    //res.isInside = false;
 
     vec3 p1 = triangle.p1;
     vec3 p2 = triangle.p2;
@@ -293,7 +292,7 @@ HitResult hitTriangle(Triangle triangle, Ray ray)
     // 从三角形背后（模型内部）击中
     if (dot(N, d) > 0.0f) {
         N = -N;   
-        res.isInside = true;
+        //res.isInside = true;
     }
 
     // 如果视线和三角形平行
@@ -326,7 +325,7 @@ HitResult hitTriangle(Triangle triangle, Ray ray)
         float gama  = 1.0 - alpha - beta;
         vec3 Nsmooth = alpha * triangle.n1 + beta * triangle.n2 + gama * triangle.n3;
         Nsmooth = normalize(Nsmooth);
-        res.normal = (res.isInside) ? (-Nsmooth) : (Nsmooth);
+        res.normal = (dot(Nsmooth, d) > 0.000001f) ? (-Nsmooth) : (Nsmooth);
     }
 
     return res;
@@ -357,7 +356,7 @@ HitResult hitArray(Ray ray, int l, int r) {
     res.distance = INF;
     for(int i=l; i<=r; i++) {
         Triangle triangle = getTriangle(i);
-        HitResult r = hitTriangle(triangle, ray);
+        HitResult r = hitTriangle1(triangle, ray);
         if(r.isHit && r.distance<res.distance) {
             res = r;
             res.material = getMaterial(i);
@@ -468,7 +467,8 @@ vec3 mon2lin(vec3 x)
     return vec3(pow(x[0], 2.2), pow(x[1], 2.2), pow(x[2], 2.2));
 }
 
-vec3 BRDF(vec3 V, vec3 N, vec3 L, vec3 X, vec3 Y, in Material material) {
+vec3 BRDF(vec3 V, vec3 N, vec3 L, vec3 X, vec3 Y, in Material material) 
+{
     float NdotL = dot(N, L);
     float NdotV = dot(N, V);
     if(NdotL < 0 || NdotV < 0) return vec3(0);
@@ -477,26 +477,26 @@ vec3 BRDF(vec3 V, vec3 N, vec3 L, vec3 X, vec3 Y, in Material material) {
     float NdotH = dot(N, H);
     float LdotH = dot(L, H);
 
+    // 各种颜色
     vec3 Cdlin = material.baseColor;
-    //vec3 Cdlin = mon2lin(baseColor); //gamma to liner
-    float Cdlum = 0.3 * Cdlin.r + 0.6 * Cdlin.g  + 0.1 * Cdlin.b; //亮度近似值
+    float Cdlum = 0.3 * Cdlin.r + 0.6 * Cdlin.g  + 0.1 * Cdlin.b;
     vec3 Ctint = (Cdlum > 0) ? (Cdlin/Cdlum) : (vec3(1));   
     vec3 Cspec = material.specular * mix(vec3(1), Ctint, material.specularTint);
     vec3 Cspec0 = mix(0.08*Cspec, Cdlin, material.metallic); // 0° 镜面反射颜色
     vec3 Csheen = mix(vec3(1), Ctint, material.sheenTint);   // 织物颜色
 
-    // 漫反射 基于粗糙度的漫反射混合
+    // 漫反射
     float Fd90 = 0.5 + 2.0 * LdotH * LdotH * material.roughness;
     float FL = SchlickFresnel(NdotL);
     float FV = SchlickFresnel(NdotV);
-    float Fd = mix(1.0, Fd90, FL) * mix(1.0, Fd90, FV);         
+    float Fd = mix(1.0, Fd90, FL) * mix(1.0, Fd90, FV);
 
     // 次表面散射
     float Fss90 = LdotH * LdotH * material.roughness;
     float Fss = mix(1.0, Fss90, FL) * mix(1.0, Fss90, FV);
     float ss = 1.25 * (Fss * (1.0 / (NdotL + NdotV) - 0.5) + 0.5);
 
-    //镜面反射
+    // 镜面反射 -- 各向异性
     float aspect = sqrt(1.0 - material.anisotropic * 0.9);
     float ax = max(0.001, sqr(material.roughness)/aspect);
     float ay = max(0.001, sqr(material.roughness)*aspect);
@@ -507,14 +507,14 @@ vec3 BRDF(vec3 V, vec3 N, vec3 L, vec3 X, vec3 Y, in Material material) {
     Gs  = smithG_GGX_aniso(NdotL, dot(L, X), dot(L, Y), ax, ay);
     Gs *= smithG_GGX_aniso(NdotV, dot(V, X), dot(V, Y), ax, ay);
 
-    // sheen
-    vec3 Fsheen = FH * material.sheen * Csheen;
-
-    // clearcoat (ior = 1.5 -> F0 = 0.04)
-    float Dr = GTR1(NdotH, mix(.1,.001, material.clearcoatGloss));
+    // 清漆
+    float Dr = GTR1(NdotH, mix(0.1, 0.001, material.clearcoatGloss));
     float Fr = mix(0.04, 1.0, FH);
     float Gr = smithG_GGX(NdotL, 0.25) * smithG_GGX(NdotV, 0.25);
 
+    // sheen
+    vec3 Fsheen = FH * material.sheen * Csheen;
+    
     vec3 diffuse = (1.0/PI) * mix(Fd, ss, material.subsurface) * Cdlin + Fsheen;
     vec3 specular = Gs * Fs * Ds;
     vec3 clearcoat = vec3(0.25 * Gr * Fr * Dr * material.clearcoat);
@@ -552,18 +552,18 @@ vec3 pathTracing(HitResult hit, int maxBounce) {
 
     for(int bounce=0; bounce<maxBounce; bounce++) 
     {
-        vec3 V = hit.viewDir;
+        vec3 V = -hit.viewDir;
         vec3 N = hit.normal;
-        //vec3 L = toNormalHemisphere(SampleHemisphere(), hit.normal); // 随机出射方向 wi
-        vec3 L = sampleCosineWeightedHemisphere(hit.normal);
+        vec3 L = toNormalHemisphere(SampleHemisphere(), hit.normal); // 随机出射方向 wi
+        //vec3 L = sampleCosineWeightedHemisphere(hit.normal);
 
         float pdf = 1.0 / (2.0 * PI);                                   // 半球均匀采样概率密度
         float cosine_o = max(0, dot(V, N));                             // 入射光和法线夹角余弦
         float cosine_i = max(0, dot(L, N));                             // 出射光和法线夹角余弦
         vec3 tangent, bitangent;
         getTangent(N, tangent, bitangent);
-        //vec3 f_r = BRDF(V, N, L, tangent, bitangent, hit.material);
-        vec3 f_r = hit.material.baseColor / PI;                         // 漫反射 BRDF
+        vec3 f_r = BRDF(V, N, L, tangent, bitangent, hit.material);
+        //vec3 f_r = hit.material.baseColor / PI;                         // 漫反射 BRDF
 
         // 漫反射: 随机发射光线
         Ray randomRay;
@@ -610,7 +610,7 @@ void main() {
         color = sampleHdr(ray.direction);
     } else {
         vec3 Le = firstHit.material.emissive;
-        vec3 Li = pathTracing(firstHit, 2);
+        vec3 Li = pathTracing(firstHit, 4);
         color = Le + Li;
     }  
     

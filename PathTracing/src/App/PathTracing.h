@@ -12,6 +12,7 @@ class PathTracing
 {
 public:
 	bool isNewScene = true;
+	int m_frameIndex = 0;
 public:
 	PathTracing();
 
@@ -19,7 +20,7 @@ public:
 	void OnResize(unsigned int width, unsigned int height);
 
 	GLuint CreatTextureBuffer(int size, const void* data);
-	void ProcessData(std::vector<TriangleEncoded> triangleEncodeds);
+	void ProcessData(std::vector<TriangleEncoded>& triangleEncodeds);
 
 private:
 	unsigned int m_Width = 1280, m_Height = 720;
@@ -31,7 +32,6 @@ private:
 	//std::vector<TriangleEncoded> m_TriangleEncodeds;
 	//std::vector<BVHNodeEncoded> m_BVHNodeEncodeds;
 
-	int m_frameIndex = 0;
 	RenderPass pass1, pass2, pass3;
 	GLuint m_VAO = 0;
 

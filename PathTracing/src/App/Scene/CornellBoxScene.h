@@ -37,8 +37,12 @@ Scene CornellBoxScene()
 	glm::mat4 cbox_redwall_trans	= glm::translate(trans, glm::vec3(-5.0f, 0.0f, -10.0f)) * glm::scale(trans, glm::vec3(0.5f, 0.5f, 0.5f));
 	glm::mat4 cbox_greenwall_trans	= glm::translate(trans, glm::vec3(5.0f, 0.0f, -10.0f))  * glm::scale(trans, glm::vec3(0.5f, 0.5f, 0.5f));
 
-	glm::mat4 cbox_largebox_trans = glm::translate(trans, glm::vec3(-2.5f, -1.5f, -11.0f)) * glm::rotate(trans, glm::radians(35.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(trans, glm::vec3(2.5f, 7.0f, 1.0f));
-	glm::mat4 cbox_smallbox_trans = glm::translate(trans, glm::vec3(2.5f, -3.5f, -8.0f)) * glm::rotate(trans, glm::radians(65.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(trans, glm::vec3(3.0f, 3.0f, 3.0f));
+	glm::mat4 cbox_largebox_trans = glm::translate(trans, glm::vec3(-2.5f, -1.5f, -11.0f)) 
+		* glm::rotate(trans, glm::radians(35.0f), glm::vec3(0.0f, 1.0f, 0.0f)) 
+		* glm::scale(trans, glm::vec3(2.5f, 7.0f, 1.0f));
+	glm::mat4 cbox_smallbox_trans = glm::translate(trans, glm::vec3(2.5f, -3.5f, -8.0f)) 
+		* glm::rotate(trans, glm::radians(65.0f), glm::vec3(0.0f, 1.0f, 0.0f)) 
+		* glm::scale(trans, glm::vec3(3.0f, 3.0f, 3.0f));
 
 	glm::mat4 light_trans			= glm::translate(trans, glm::vec3(0.0f, 4.9f, -10.0f)) * glm::scale(trans, glm::vec3(0.3f, 0.3f, 0.3f));
 

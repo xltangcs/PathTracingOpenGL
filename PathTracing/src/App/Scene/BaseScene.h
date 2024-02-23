@@ -23,7 +23,7 @@ Scene CreatBaseScene()
 	glm::mat4 quadTrans = glm::mat4(1.0f);
 	quadTrans = glm::translate(quadTrans, glm::vec3(0.0f, -2.0f, -1.0f)) 
 		//* glm::rotate(quadTrans, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f))
-		* glm::scale(quadTrans, glm::vec3(5.0f, 0.1f, 5.0f));
+		* glm::scale(quadTrans, glm::vec3(5.0f, 2.0f, 5.0f));
 	ModelInstance quad("Cube", quadId, quadTrans, blueMatId);
 	scene.AddModelInstance(quad);
 

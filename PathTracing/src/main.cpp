@@ -59,6 +59,7 @@ public:
 		ImGui::Begin("Setting");
 
 		ImGui::Text("The average fps: %.3f", ImGui::GetIO().Framerate);
+		ImGui::Text("Frame Index: %d", m_Renderer->m_frameIndex);
 
 		ImGui::Combo("Scene", &m_SceneIndex, m_SceneNames.data(), m_SceneNames.size());
 		ImGui::Separator();
