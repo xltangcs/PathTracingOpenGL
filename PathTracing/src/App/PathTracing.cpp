@@ -20,6 +20,7 @@ void PathTracing::Render(Camera& camera, Scene& scene)
 {
 	if (isNewScene) ProcessData(scene.m_TriangleEncoded);
 	if (camera.isCameraMoved || isNewScene) m_frameIndex = 0;
+
 	pass1.GetShader().use();
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_BUFFER, m_TrianglesTexture);

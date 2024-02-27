@@ -20,6 +20,7 @@
 #include "App/Scene/BaseScene.h"
 #include "App/Scene/CornellBoxScene.h"
 #include "App/Scene/BRDF_Test_Scene.h"
+#include "App/Scene/ImportanceSampling.h"
 
 class MyImGuiLayer : public ImGuiLayer
 {
@@ -29,11 +30,14 @@ public:
 	{
 		m_Renderer = std::make_shared<PathTracing>();
 
-		m_SceneNames.push_back("BRDF Test Scene");
-		createScenePtrs.push_back(BRDF_Test_Scene);
+		m_SceneNames.push_back("Importance_Sampling");
+		createScenePtrs.push_back(ImportanceSampling);
 
 		m_SceneNames.push_back("Cornell Box Scene");
 		createScenePtrs.push_back(CornellBoxScene);
+
+		m_SceneNames.push_back("BRDF Test Scene");
+		createScenePtrs.push_back(BRDF_Test_Scene);
 
 		m_SceneNames.push_back("Base Scene");
 		createScenePtrs.push_back(CreatBaseScene);

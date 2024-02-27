@@ -54,7 +54,7 @@ int Scene::AddModelInstance(const ModelInstance& instances)
 void Scene::AddEnvMap(const std::string& filename)
 {
     HDRLoaderResult hdrRes;
-    bool r = HDRLoader::load("./assets/textures/HDR/sunset.hdr", hdrRes);
+    bool r = HDRLoader::load(filename.c_str(), hdrRes);
     if (!r)
     {
         printf("Failed to load %s\n", filename.c_str());
