@@ -15,11 +15,14 @@ Start by cloning the repository with:
 - Disney Principled BRDF
 ![Disney Principled BRDF](https://github.com/xltangcs/PathTracingOpenGL/blob/main/images/BRDF.png)
 
+- Importance Sampling
+![ImportanceSampling](https://github.com/xltangcs/PathTracingOpenGL/blob/main/images/ImportanceSampling.png)
 
 ### To Do
 - Save image funtion
 - Disney Principled BRDF (finished(maybe))
-- Importance Sample
+- Importance Sampling (finished)
+- Multiple Importance Sampling
 - Russian Roulette
 - Tile-Based Rendering
 - Filtering
